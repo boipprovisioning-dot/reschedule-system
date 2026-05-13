@@ -203,7 +203,7 @@ function clearAlerts(){['errAlert','pendingAlert'].forEach(id=>document.getEleme
 function setLoad(on){document.getElementById('loginBtn').disabled=on;document.getElementById('spin').style.display=on?'block':'none';document.getElementById('loginTxt').textContent=on?'กำลังตรวจสอบ...':'เข้าสู่ระบบ';document.getElementById('loginArrow').style.display=on?'none':'';}
 
 async function doLogin(){
-  if(API==='YOUR_APPS_SCRIPT_URL'){showErr('กรุณาตั้งค่า API URL ก่อน (ดูคำแนะนำในไฟล์)');return;}
+  if(API===https://script.google.com/macros/s/AKfycbwmhWSttROB898FD6zUhLE3DyxYleniCQArM-B5wIkVw06aLb1dfvSLZstHqezdNtM2/exec){showErr('กรุณาตั้งค่า API URL ก่อน (ดูคำแนะนำในไฟล์)');return;}
   clearAlerts();
   const u=document.getElementById('uname').value.trim();
   const p=document.getElementById('pw').value;
