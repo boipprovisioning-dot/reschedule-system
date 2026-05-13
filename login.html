@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>เข้าสู่ระบบ — ระบบเลื่อนนัดติดตั้ง</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--b50:#E6F1FB;--b100:#B5D4F4;--b400:#378ADD;--b600:#185FA5;--b800:#0C447C;--b900:#042C53;--c50:#FAECE7;--c100:#F5C4B3;--c400:#D85A30;--c600:#993C1D;--t50:#E1F5EE;--t100:#9FE1CB;--t400:#1D9E75;--t600:#0F6E56;--a50:#FAEEDA;--a100:#FAC775;--a600:#854F0B;--g50:#F7F6F2;--g100:#EEEDE8;--g200:#D8D7D0;--g300:#C4C3BB;--g500:#888780;--g700:#4A4A47;--g900:#1C1C1A}
+html{height:100%}
+body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--b900);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:1rem;overflow:hidden;position:relative}
+.bg-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(55,138,221,.04)1px,transparent 1px),linear-gradient(90deg,rgba(55,138,221,.04)1px,transparent 1px);background-size:40px 40px;pointer-events:none}
+.bc{position:absolute;border-radius:50%;pointer-events:none}
+.bc1{width:500px;height:500px;top:-150px;right:-150px;background:rgba(55,138,221,.08)}
+.bc2{width:350px;height:350px;bottom:-100px;left:-100px;background:rgba(55,138,221,.06)}
+.wrap{position:relative;z-index:1;width:100%;max-width:400px}
+.brand{text-align:center;margin-bottom:1.75rem}
+.brand-icon{width:56px;height:56px;background:rgba(55,138,221,.2);border:1px solid rgba(55,138,221,.3);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 1rem}
+.brand-icon svg{width:26px;height:26px;fill:none;stroke:#378ADD;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.brand-name{font-size:20px;font-weight:600;color:#fff}
+.brand-sub{font-size:12px;color:rgba(255,255,255,.35);margin-top:4px}
+.card{background:#fff;border-radius:20px;padding:1.875rem;box-shadow:0 24px 60px rgba(0,0,0,.3);animation:ci .45s ease both}
+@keyframes ci{from{opacity:0;transform:translateY(18px) scale(.97)}to{opacity:1;transform:none}}
+.card-title{font-size:18px;font-weight:600;color:var(--g900);margin-bottom:.25rem}
+.card-sub{font-size:13px;color:var(--g500);margin-bottom:1.5rem}
+.fg{display:flex;flex-direction:column;gap:6px;margin-bottom:1rem}
+label{font-size:13px;font-weight:500;color:var(--g700)}
+.iw{position:relative}
+.fi{position:absolute;left:11px;top:50%;transform:translateY(-50%);width:15px;height:15px;stroke:var(--g500);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;pointer-events:none}
+input{width:100%;padding:10px 40px 10px 36px;font-size:14px;font-family:inherit;border:1.5px solid var(--g200);border-radius:10px;background:#fff;color:var(--g900);outline:none;transition:border-color .2s,box-shadow .2s}
+input.plain{padding:10px 12px}
+input:focus{border-color:var(--b400);box-shadow:0 0 0 3px rgba(55,138,221,.15)}
+input.err{border-color:var(--c400)!important;box-shadow:0 0 0 3px rgba(216,90,48,.1)!important}
+.pw-btn{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--g500);padding:3px;display:flex}
+.pw-btn:hover{color:var(--g700)}
+.pw-btn svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.alert{display:none;border-radius:8px;padding:10px 12px;font-size:13px;margin-bottom:1rem;align-items:center;gap:8px}
+.alert.show{display:flex}
+.alert svg{width:14px;height:14px;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+.a-err{background:var(--c50);border:1px solid var(--c100);color:var(--c600)}.a-err svg{stroke:var(--c600)}
+.a-warn{background:var(--a50);border:1px solid var(--a100);color:var(--a600)}.a-warn svg{stroke:var(--a600)}
+.a-ok{background:var(--t50);border:1px solid var(--t100);color:var(--t600)}.a-ok svg{stroke:var(--t600)}
+.a-cfg{background:#FFF8E1;border:1px solid #FFD54F;color:#5D4037;border-radius:8px;padding:10px 12px;font-size:12px;margin-bottom:1rem;line-height:1.6}
+.a-cfg code{background:rgba(0,0,0,.08);padding:1px 5px;border-radius:4px;font-family:'IBM Plex Mono',monospace}
+.btn-login{width:100%;padding:12px;background:var(--b600);border:none;border-radius:10px;color:#fff;font-size:15px;font-weight:600;font-family:inherit;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn-login:hover{background:var(--b800);transform:translateY(-1px);box-shadow:0 4px 14px rgba(24,95,165,.35)}
+.btn-login:active{transform:none;box-shadow:none}
+.btn-login:disabled{opacity:.6;cursor:not-allowed;transform:none;box-shadow:none}
+.spin{width:15px;height:15px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:sp .7s linear infinite;display:none}
+@keyframes sp{to{transform:rotate(360deg)}}
+.divider{text-align:center;font-size:12px;color:var(--g500);margin:1.125rem 0;position:relative}
+.divider::before,.divider::after{content:'';position:absolute;top:50%;width:44%;height:1px;background:var(--g200)}
+.divider::before{left:0}.divider::after{right:0}
+.btn-sec{width:100%;padding:10px;background:transparent;border:1.5px solid var(--g200);border-radius:10px;color:var(--g700);font-size:13px;font-weight:500;font-family:inherit;cursor:pointer;transition:all .2s}
+.btn-sec:hover{background:var(--g100);border-color:var(--g300)}
+.foot{text-align:center;margin-top:1.125rem;font-size:11px;color:rgba(255,255,255,.2)}
+.ov{display:none;position:fixed;inset:0;background:rgba(4,44,83,.6);z-index:300;align-items:center;justify-content:center;padding:1rem;backdrop-filter:blur(3px)}
+.ov.show{display:flex}
+.modal{background:#fff;border-radius:20px;width:100%;max-width:440px;max-height:92vh;overflow-y:auto;animation:mi .25s ease both}
+@keyframes mi{from{opacity:0;transform:scale(.95) translateY(20px)}to{opacity:1;transform:none}}
+.mh{padding:1.25rem 1.5rem;border-bottom:1px solid var(--g200);display:flex;align-items:center;justify-content:space-between;background:var(--g50);position:sticky;top:0;z-index:5}
+.mt{font-size:15px;font-weight:600;color:var(--g900)}
+.mcl{width:30px;height:30px;border-radius:8px;border:none;background:var(--g200);cursor:pointer;font-size:15px;color:var(--g700);display:flex;align-items:center;justify-content:center}
+.mcl:hover{background:var(--g300)}
+.mb{padding:1.5rem}
+.mf{padding:1rem 1.5rem;border-top:1px solid var(--g200);display:flex;gap:8px;justify-content:flex-end}
+.btn-sm{padding:8px 18px;border-radius:8px;font-size:13px;font-weight:500;font-family:inherit;cursor:pointer;border:1.5px solid var(--g200);background:transparent;color:var(--g700);transition:all .15s}
+.btn-sm:hover{background:var(--g100)}
+.btn-ok{background:var(--t400);border-color:var(--t400);color:#fff}
+.btn-ok:hover{background:var(--t600)}
+.btn-ok:disabled{opacity:.6;cursor:not-allowed}
+.minfo{background:var(--b50);border:1px solid var(--b100);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--b600);line-height:1.6;margin-bottom:1.25rem}
+.role-row{display:grid;grid-template-columns:1fr 1fr;gap:.625rem;margin-bottom:1rem}
+.role-opt{border:1.5px solid var(--g200);border-radius:12px;padding:12px 10px;cursor:pointer;text-align:center;transition:all .2s;background:#fff}
+.role-opt:hover{border-color:var(--b400)}
+.role-opt.sel{border-color:var(--b600);background:var(--b50);box-shadow:0 0 0 3px rgba(55,138,221,.12)}
+.ro-icon{font-size:22px;margin-bottom:4px}
+.ro-label{font-size:12px;font-weight:600;color:var(--g700)}
+.ro-sub{font-size:11px;color:var(--g500);margin-top:2px}
+.role-opt.sel .ro-label{color:var(--b600)}
+.mfg{display:flex;flex-direction:column;gap:5px;margin-bottom:.875rem}
+.mfg:last-child{margin-bottom:0}
+.mfg label{font-size:13px;font-weight:500;color:var(--g700)}
+</style>
+</head>
+<body>
+<div class="bg-grid"></div>
+<div class="bc bc1"></div>
+<div class="bc bc2"></div>
+
+<div class="wrap">
+  <div class="brand">
+    <div class="brand-icon">
+      <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="12" y1="14" x2="12" y2="18"/><line x1="10" y1="16" x2="14" y2="16"/></svg>
+    </div>
+    <div class="brand-name">ระบบเลื่อนนัดติดตั้ง</div>
+    <div class="brand-sub">Appointment Reschedule System</div>
+  </div>
+
+  <div class="card">
+    <div class="a-cfg" id="cfgNotice">
+      ⚙️ <strong>ต้องตั้งค่าก่อนใช้งาน:</strong> เปิดไฟล์ด้วย Notepad แล้วเปลี่ยน<br>
+      <code>https://script.google.com/macros/s/AKfycbwmhWSttROB898FD6zUhLE3DyxYleniCQArM-B5wIkVw06aLb1dfvSLZstHqezdNtM2/exec</code> เป็น Web App URL ของคุณ<br>
+      (ดูขั้นตอนใน README.txt ที่แนบมา)
+    </div>
+    <div class="card-title">เข้าสู่ระบบ</div>
+    <div class="card-sub">กรุณากรอก Username และ Password</div>
+    <div class="alert a-warn" id="pendingAlert">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><circle cx="12" cy="16" r="1" fill="currentColor" stroke="none"/></svg>
+      <span>บัญชีของคุณรอการอนุมัติจาก Admin</span>
+    </div>
+    <div class="alert a-err" id="errAlert">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+      <span id="errTxt">Username หรือ Password ไม่ถูกต้อง</span>
+    </div>
+    <div class="fg">
+      <label>Username</label>
+      <div class="iw">
+        <svg class="fi" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+        <input type="text" id="uname" placeholder="กรอก Username" autocomplete="username" onkeydown="if(event.key==='Enter')document.getElementById('pw').focus()">
+      </div>
+    </div>
+    <div class="fg" style="margin-bottom:1.25rem">
+      <label>Password</label>
+      <div class="iw">
+        <svg class="fi" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+        <input type="password" id="pw" placeholder="กรอก Password" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
+        <button class="pw-btn" onclick="tpw('pw','eye1')"><svg id="eye1" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+      </div>
+    </div>
+    <button class="btn-login" id="loginBtn" onclick="doLogin()">
+      <div class="spin" id="spin"></div><span id="loginTxt">เข้าสู่ระบบ</span>
+      <svg id="loginArrow" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+    </button>
+    <div class="divider">หรือ</div>
+    <button class="btn-sec" onclick="openReg()">ขอสมัครบัญชีใหม่</button>
+  </div>
+  <div class="foot">© 2025 ระบบเลื่อนนัดติดตั้ง · NSA Team</div>
+</div>
+
+<!-- Register Modal -->
+<div class="ov" id="regOv" onclick="if(event.target===this)closeReg()">
+  <div class="modal">
+    <div class="mh"><div class="mt">📋 ขอสมัครบัญชีใหม่</div><button class="mcl" onclick="closeReg()">✕</button></div>
+    <div class="mb">
+      <div class="minfo">หลังจากส่งคำขอ <strong>Admin จะอนุมัติสิทธิ์</strong> ก่อนที่จะเข้าใช้งานได้</div>
+      <div class="alert a-ok" id="regOk" style="margin-bottom:.875rem"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg><span>ส่งคำขอสำเร็จ! รอ Admin อนุมัติ</span></div>
+      <div class="alert a-err" id="regErr" style="margin-bottom:.875rem"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg><span id="regErrTxt"></span></div>
+      <div style="font-size:11px;font-weight:600;color:var(--g500);text-transform:uppercase;letter-spacing:.07em;margin-bottom:.5rem">สิทธิ์ที่ต้องการ</div>
+      <div class="role-row">
+        <div class="role-opt sel" id="roleUser" onclick="selRole('user')"><div class="ro-icon">👤</div><div class="ro-label">เจ้าหน้าที่</div><div class="ro-sub">กรอกฟอร์มเลื่อนนัด</div></div>
+        <div class="role-opt" id="roleAdmin" onclick="selRole('admin')"><div class="ro-icon">🛡️</div><div class="ro-label">Admin</div><div class="ro-sub">จัดการข้อมูลทั้งหมด</div></div>
+      </div>
+      <div class="mfg"><label>ชื่อ-นามสกุล <span style="color:var(--c400)">*</span></label><input class="plain" type="text" id="rFull" placeholder="ชื่อ-นามสกุล"></div>
+      <div class="mfg"><label>Username <span style="color:var(--c400)">*</span></label><input class="plain" type="text" id="rUser" placeholder="ภาษาอังกฤษ/ตัวเลข ไม่มีช่องว่าง"></div>
+      <div class="mfg"><label>Password <span style="color:var(--c400)">*</span></label>
+        <div class="iw"><input type="password" id="rPw" placeholder="อย่างน้อย 6 ตัวอักษร"><button class="pw-btn" onclick="tpw('rPw','eye2')"><svg id="eye2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div>
+      </div>
+      <div class="mfg"><label>Email (รับแจ้งผลอนุมัติ)</label><input class="plain" type="text" id="rEmail" placeholder="อีเมลของคุณ (ถ้ามี)"></div>
+    </div>
+    <div class="mf"><button class="btn-sm" onclick="closeReg()">ยกเลิก</button><button class="btn-sm btn-ok" id="regBtn" onclick="submitReg()">ส่งคำขอสมัคร</button></div>
+  </div>
+</div>
+
+<script>
+/* ══════════════════════════════════════════════════════
+   ⚙️  ตั้งค่า URL ของ Google Apps Script Web App ที่นี่
+   วิธีได้ URL:
+   1. เปิด Apps Script → Deploy → New deployment
+   2. Type: Web app
+   3. Execute as: Me
+   4. Who has access: Anyone
+   5. Deploy → Copy URL แล้วแทนที่ข้อความด้านล่าง
+══════════════════════════════════════════════════════ */
+const API = 'YOUR_APPS_SCRIPT_URL';
+/* ══════════════════════════════════════════════════════ */
+
+if(API !== 'YOUR_APPS_SCRIPT_URL') document.getElementById('cfgNotice').style.display='none';
+
+async function GET(params){
+  const u=new URL(API);
+  Object.entries(params).forEach(([k,v])=>u.searchParams.set(k,v));
+  const r=await fetch(u.toString());
+  const j=await r.json();
+  if(!j.ok) throw new Error(j.error||'เกิดข้อผิดพลาด');
+  return j.data;
+}
+async function POST(body){
+  const r=await fetch(API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  const j=await r.json();
+  if(!j.ok) throw new Error(j.error||'เกิดข้อผิดพลาด');
+  return j.data;
+}
+
+function tpw(id,eid){
+  const el=document.getElementById(id),ic=document.getElementById(eid);
+  el.type=el.type==='password'?'text':'password';
+  ic.innerHTML=el.type==='text'?'<path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/>':'<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
+}
+function showErr(msg){document.getElementById('errTxt').textContent=msg;document.getElementById('errAlert').classList.add('show');document.getElementById('pendingAlert').classList.remove('show');['uname','pw'].forEach(id=>document.getElementById(id).classList.add('err'));}
+function clearAlerts(){['errAlert','pendingAlert'].forEach(id=>document.getElementById(id).classList.remove('show'));['uname','pw'].forEach(id=>document.getElementById(id).classList.remove('err'));}
+function setLoad(on){document.getElementById('loginBtn').disabled=on;document.getElementById('spin').style.display=on?'block':'none';document.getElementById('loginTxt').textContent=on?'กำลังตรวจสอบ...':'เข้าสู่ระบบ';document.getElementById('loginArrow').style.display=on?'none':'';}
+
+async function doLogin(){
+  if(API==='YOUR_APPS_SCRIPT_URL'){showErr('กรุณาตั้งค่า API URL ก่อน (ดูคำแนะนำในไฟล์)');return;}
+  clearAlerts();
+  const u=document.getElementById('uname').value.trim();
+  const p=document.getElementById('pw').value;
+  if(!u||!p){showErr('กรุณากรอก Username และ Password');return;}
+  setLoad(true);
+  try{
+    const user=await GET({action:'login',username:u,password:p});
+    sessionStorage.setItem('rsch_api',API);
+    sessionStorage.setItem('rsch_user','true');
+    sessionStorage.setItem('rsch_username',user.username);
+    sessionStorage.setItem('rsch_fullname',user.fullname||user.username);
+    sessionStorage.setItem('rsch_role',user.role);
+    if(user.role==='admin'){sessionStorage.setItem('rsch_admin','true');window.location.href='admin.html';}
+    else window.location.href='reschedule_form.html';
+  }catch(err){
+    setLoad(false);
+    if(err.message==='PENDING') document.getElementById('pendingAlert').classList.add('show');
+    else showErr(err.message);
+  }
+}
+
+let regRole='user';
+function openReg(){['regOk','regErr'].forEach(id=>document.getElementById(id).classList.remove('show'));['rFull','rUser','rPw','rEmail'].forEach(id=>document.getElementById(id).value='');selRole('user');document.getElementById('regOv').classList.add('show');}
+function closeReg(){document.getElementById('regOv').classList.remove('show');}
+function selRole(r){regRole=r;document.getElementById('roleUser').classList.toggle('sel',r==='user');document.getElementById('roleAdmin').classList.toggle('sel',r==='admin');}
+async function submitReg(){
+  document.getElementById('regOk').classList.remove('show');document.getElementById('regErr').classList.remove('show');
+  const full=document.getElementById('rFull').value.trim(),user=document.getElementById('rUser').value.trim(),pw=document.getElementById('rPw').value,email=document.getElementById('rEmail').value.trim();
+  if(!full||!user||!pw){showRErr('กรุณากรอกข้อมูลที่จำเป็น');return;}
+  if(pw.length<6){showRErr('Password ต้องมีอย่างน้อย 6 ตัวอักษร');return;}
+  if(/\s/.test(user)){showRErr('Username ต้องไม่มีช่องว่าง');return;}
+  if(API==='YOUR_APPS_SCRIPT_URL'){showRErr('กรุณาตั้งค่า API URL ก่อน');return;}
+  const btn=document.getElementById('regBtn');btn.disabled=true;btn.textContent='กำลังส่ง...';
+  try{
+    await POST({action:'register',data:{fullname:full,username:user,password:pw,email,role:regRole}});
+    document.getElementById('regOk').classList.add('show');setTimeout(closeReg,2500);
+  }catch(err){showRErr(err.message);}
+  finally{btn.disabled=false;btn.textContent='ส่งคำขอสมัคร';}
+}
+function showRErr(msg){document.getElementById('regErrTxt').textContent=msg;document.getElementById('regErr').classList.add('show');}
+</script>
+</body>
+</html>

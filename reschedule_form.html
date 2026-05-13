@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ฟอร์มเลื่อนนัดติดตั้ง</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--b50:#E6F1FB;--b100:#B5D4F4;--b400:#378ADD;--b600:#185FA5;--b800:#0C447C;--b900:#042C53;--c50:#FAECE7;--c100:#F5C4B3;--c400:#D85A30;--c600:#993C1D;--t50:#E1F5EE;--t100:#9FE1CB;--t400:#1D9E75;--t600:#0F6E56;--a50:#FAEEDA;--a600:#854F0B;--p50:#F0EDFB;--p100:#C9BFF0;--p600:#5438A0;--g50:#F7F6F2;--g100:#EEEDE8;--g200:#D8D7D0;--g500:#888780;--g700:#4A4A47;--g900:#1C1C1A}
+html{font-size:16px;scroll-behavior:smooth}
+body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--g50);color:var(--g900);min-height:100vh}
+.topbar{background:var(--b900);color:#fff;padding:0 1.5rem;height:52px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.tb-brand{display:flex;align-items:center;gap:10px;font-size:14px;font-weight:500}
+.tb-dot{width:8px;height:8px;border-radius:50%;background:#378ADD;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.8)}}
+.tb-right{display:flex;align-items:center;gap:10px}
+.tb-time{font-family:'IBM Plex Mono',monospace;font-size:13px;color:rgba(255,255,255,.5)}
+.tb-user{font-size:12px;color:rgba(255,255,255,.75);background:rgba(255,255,255,.1);padding:4px 12px;border-radius:20px}
+.tb-btn{font-size:12px;color:var(--b100);padding:5px 12px;border:1px solid rgba(55,138,221,.35);border-radius:20px;cursor:pointer;background:none;font-family:inherit;transition:all .2s}
+.tb-btn:hover{background:rgba(55,138,221,.2)}
+.hero{background:linear-gradient(135deg,var(--b900) 0%,var(--b800) 60%,var(--b600) 100%);padding:2.5rem 1.5rem 2rem;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;top:-60px;right:-60px;width:260px;height:260px;border-radius:50%;background:rgba(55,138,221,.12)}
+.hero::after{content:'';position:absolute;bottom:-40px;left:30%;width:180px;height:180px;border-radius:50%;background:rgba(55,138,221,.07)}
+.hero-inner{max-width:760px;margin:0 auto;position:relative;z-index:1}
+.hero-tag{display:inline-block;background:rgba(55,138,221,.25);color:var(--b100);font-size:11px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;padding:4px 12px;border-radius:20px;margin-bottom:1rem;border:1px solid rgba(55,138,221,.3)}
+.hero h1{font-size:27px;font-weight:600;color:#fff;line-height:1.3;margin-bottom:.5rem}
+.hero p{font-size:14px;color:rgba(255,255,255,.6);font-weight:300}
+.page-body{max-width:760px;margin:0 auto;padding:2rem 1.25rem 4rem}
+.prog-bar{background:#fff;border:1px solid var(--g200);border-radius:12px;padding:1rem 1.5rem;margin-bottom:1.5rem;display:flex}
+.prog-step{flex:1;text-align:center;position:relative}
+.prog-step::after{content:'';position:absolute;top:14px;right:-50%;width:100%;height:2px;background:var(--g200);z-index:0}
+.prog-step:last-child::after{display:none}
+.prog-dot{width:28px;height:28px;border-radius:50%;background:var(--g100);border:2px solid var(--g200);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:var(--g500);margin:0 auto 6px;position:relative;z-index:1;transition:all .25s}
+.prog-step.act .prog-dot{background:var(--b600);border-color:var(--b600);color:#fff}
+.prog-step.done .prog-dot{background:var(--t400);border-color:var(--t400);color:#fff}
+.prog-step.done::after{background:var(--t400)}
+.prog-label{font-size:11px;color:var(--g500)}
+.prog-step.act .prog-label{color:var(--b600);font-weight:500}
+.prog-step.done .prog-label{color:var(--t600)}
+.card{background:#fff;border:1px solid var(--g200);border-radius:16px;overflow:hidden;margin-bottom:1rem;animation:fadeUp .4s ease both}
+.card:nth-child(2){animation-delay:.05s}.card:nth-child(3){animation-delay:.1s}.card:nth-child(4){animation-delay:.15s}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.card-hdr{padding:1rem 1.5rem;border-bottom:1px solid var(--g100);display:flex;align-items:center;gap:10px;background:var(--g50)}
+.card-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.card-icon svg{width:16px;height:16px;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.ci-bl{background:var(--b50)}.ci-bl svg{stroke:var(--b600)}
+.ci-co{background:var(--c50)}.ci-co svg{stroke:var(--c600)}
+.ci-tl{background:var(--t50)}.ci-tl svg{stroke:var(--t600)}
+.ci-am{background:var(--a50)}.ci-am svg{stroke:var(--a600)}
+.card-title{font-size:14px;font-weight:600;color:var(--g900)}
+.card-sub{font-size:12px;color:var(--g500);margin-top:1px}
+.card-body{padding:1.5rem}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem}
+@media(max-width:560px){.form-grid{grid-template-columns:1fr}.hero h1{font-size:22px}.topbar{padding:0 1rem}}
+.form-group{display:flex;flex-direction:column;gap:6px}
+.form-group.full{grid-column:1/-1}
+label{font-size:13px;font-weight:500;color:var(--g700);display:flex;align-items:center;gap:4px}
+.req{color:var(--c400)}
+input[type="text"],input[type="tel"],input[type="date"],input[type="email"],select,textarea{width:100%;padding:10px 12px;font-size:14px;font-family:inherit;border:1.5px solid var(--g200);border-radius:10px;background:#fff;color:var(--g900);transition:border-color .2s,box-shadow .2s;appearance:none;-webkit-appearance:none;outline:none}
+input:hover,select:hover,textarea:hover{border-color:var(--g500)}
+input:focus,select:focus,textarea:focus{border-color:var(--b400);box-shadow:0 0 0 3px rgba(55,138,221,.15)}
+select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23888780' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:36px;cursor:pointer}
+textarea{resize:vertical;min-height:90px;line-height:1.6}
+.hint{font-size:11px;color:var(--g500);margin-top:-2px}
+.email-notice{background:var(--p50);border:1px solid var(--p100);border-radius:8px;padding:9px 12px;font-size:12px;color:var(--p600);display:flex;align-items:center;gap:8px;margin-top:2px}
+.email-notice svg{width:13px;height:13px;stroke:var(--p600);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+.submit-card{background:#fff;border:1px solid var(--g200);border-radius:16px;padding:1.5rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap}
+.submit-info{font-size:13px;color:var(--g500)}
+.submit-info strong{color:var(--g900);font-size:14px;display:block;margin-bottom:2px}
+.rec-badge{background:var(--b50);color:var(--b600);font-size:12px;font-weight:500;padding:4px 10px;border-radius:20px;border:1px solid var(--b100)}
+.btn-group{display:flex;gap:8px;flex-wrap:wrap}
+.btn{padding:10px 20px;border-radius:10px;font-size:14px;font-weight:500;font-family:inherit;cursor:pointer;border:1.5px solid var(--g200);background:transparent;color:var(--g700);transition:all .15s;display:flex;align-items:center;gap:6px}
+.btn:hover{background:var(--g100);border-color:var(--g500)}
+.btn:active{transform:scale(.97)}
+.btn:disabled{opacity:.6;cursor:not-allowed;transform:none}
+.btn-pri{background:var(--b600);border-color:var(--b600);color:#fff}.btn-pri:hover{background:var(--b800);border-color:var(--b800)}
+.btn-suc{background:var(--t400);border-color:var(--t400);color:#fff}.btn-suc:hover{background:var(--t600);border-color:var(--t600)}
+.ov{display:none;position:fixed;inset:0;background:rgba(4,44,83,.5);z-index:200;align-items:center;justify-content:center;padding:1rem;backdrop-filter:blur(2px)}
+.ov.show{display:flex}
+.modal{background:#fff;border-radius:20px;width:100%;max-width:520px;max-height:85vh;overflow-y:auto;animation:mi .25s ease both}
+@keyframes mi{from{opacity:0;transform:scale(.95) translateY(20px)}to{opacity:1;transform:none}}
+.mh{padding:1.5rem;border-bottom:1px solid var(--g100);display:flex;align-items:center;justify-content:space-between}
+.mt{font-size:16px;font-weight:600}
+.mcl{width:32px;height:32px;border-radius:8px;border:none;background:var(--g100);cursor:pointer;font-size:18px;color:var(--g700);display:flex;align-items:center;justify-content:center}
+.mcl:hover{background:var(--g200)}
+.mb{padding:1.5rem}
+.sum-row{display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;padding:8px 0;border-bottom:1px solid var(--g100);font-size:13px}
+.sum-row:last-child{border-bottom:none}
+.sum-key{color:var(--g500);min-width:140px}
+.sum-val{color:var(--g900);font-weight:500;text-align:right;word-break:break-all}
+.mf{padding:1rem 1.5rem;border-top:1px solid var(--g100);display:flex;gap:10px;justify-content:flex-end}
+.toast-ct{position:fixed;bottom:2rem;right:2rem;z-index:999;display:flex;flex-direction:column;gap:8px}
+.toast{background:var(--g900);color:#fff;padding:12px 18px;border-radius:12px;font-size:13px;display:flex;align-items:center;gap:10px;min-width:260px;box-shadow:0 4px 20px rgba(0,0,0,.2);animation:toastIn .3s ease both;border-left:3px solid var(--t400)}
+@keyframes toastIn{from{opacity:0;transform:translateY(16px) scale(.96)}to{opacity:1;transform:none}}
+.toast.err{border-left-color:var(--c400)}
+.tdot{width:8px;height:8px;border-radius:50%;background:var(--t400);flex-shrink:0}
+.toast.err .tdot{background:var(--c400)}
+.auth-block{display:none;position:fixed;inset:0;background:rgba(4,44,83,.85);z-index:500;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+.auth-block.show{display:flex}
+.auth-box{background:#fff;border-radius:20px;padding:2rem;text-align:center;max-width:360px;width:100%}
+.auth-box h2{font-size:18px;font-weight:600;margin-bottom:.5rem}
+.auth-box p{font-size:13px;color:var(--g500);margin-bottom:1.5rem;line-height:1.6}
+footer{text-align:center;padding:1.5rem;font-size:12px;color:var(--g500);border-top:1px solid var(--g200);margin-top:2rem}
+</style>
+</head>
+<body>
+
+<div class="auth-block" id="authBlock">
+  <div class="auth-box">
+    <div style="font-size:48px;margin-bottom:1rem">🔒</div>
+    <h2>กรุณาเข้าสู่ระบบก่อน</h2>
+    <p>เซสชันหมดอายุหรือยังไม่ได้เข้าสู่ระบบ</p>
+    <button class="btn btn-pri" style="width:100%;justify-content:center" onclick="window.location.href='login.html'">ไปหน้าเข้าสู่ระบบ</button>
+  </div>
+</div>
+
+<div class="topbar">
+  <div class="tb-brand"><div class="tb-dot"></div>ระบบเลื่อนนัดติดตั้ง</div>
+  <div class="tb-right">
+    <span class="tb-time" id="clock">--:--:--</span>
+    <span class="tb-user" id="tbUser"></span>
+    <button class="tb-btn" id="adminBtn" style="display:none" onclick="window.location.href='admin.html'">Admin →</button>
+    <button class="tb-btn" onclick="doLogout()">ออกจากระบบ</button>
+  </div>
+</div>
+
+<div class="hero">
+  <div class="hero-inner">
+    <div class="hero-tag">Appointment Management</div>
+    <h1>ฟอร์มคีย์เลื่อนนัดติดตั้ง</h1>
+    <p>กรอกข้อมูลให้ครบถ้วนเพื่อดำเนินการเลื่อนนัดในระบบ</p>
+  </div>
+</div>
+
+<div class="page-body">
+  <div class="prog-bar">
+    <div class="prog-step act" id="ps1"><div class="prog-dot">1</div><div class="prog-label">Circuit</div></div>
+    <div class="prog-step" id="ps2"><div class="prog-dot">2</div><div class="prog-label">Staff</div></div>
+    <div class="prog-step" id="ps3"><div class="prog-dot">3</div><div class="prog-label">เหตุผล</div></div>
+    <div class="prog-step" id="ps4"><div class="prog-dot">4</div><div class="prog-label">PM/AE</div></div>
+  </div>
+  <p style="font-size:12px;color:var(--g500);margin-bottom:1rem"><span class="req">*</span> หมายถึงช่องที่จำเป็นต้องกรอก</p>
+
+  <div class="card">
+    <div class="card-hdr"><div class="card-icon ci-bl"><svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div><div><div class="card-title">ข้อมูล Circuit</div><div class="card-sub">รายละเอียดวงจรและวันที่นัดหมาย</div></div></div>
+    <div class="card-body"><div class="form-grid">
+      <div class="form-group"><label>Circuit ที่ต้องการเลื่อน <span class="req">*</span></label><input type="text" id="f_circuit" placeholder="เช่น 1001234567" oninput="prog()"><span class="hint">หมายเลข Circuit ในระบบ</span></div>
+      <div class="form-group"><label>Customer Name <span class="req">*</span></label><input type="text" id="f_customer" placeholder="ชื่อลูกค้า" oninput="prog()"></div>
+      <div class="form-group"><label>Due Date <span class="req">*</span></label><input type="date" id="f_due_date" onchange="prog()"><span class="hint">วันนัดเดิม</span></div>
+      <div class="form-group"><label>Change Due Date for Installation <span class="req">*</span></label><input type="date" id="f_new_due_date" onchange="prog()"><span class="hint">วันนัดใหม่</span></div>
+    </div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-hdr"><div class="card-icon ci-co"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg></div><div><div class="card-title">ข้อมูลผู้ดำเนินการ</div><div class="card-sub">Staff ผู้รับผิดชอบ, เบอร์ติดต่อ และ Email</div></div></div>
+    <div class="card-body"><div class="form-grid">
+      <div class="form-group full"><label>Staff Code_Name <span class="req">*</span></label>
+        <select id="f_staff" onchange="prog()">
+          <option value="">— เลือก Staff —</option>
+          <option value="57058_Puwadon Saekow">57058 — Puwadon Saekow</option>
+          <option value="33083_Amnart Buathong">33083 — Amnart Buathong</option>
+          <option value="8712_Wirut Krugsamrong">8712 — Wirut Krugsamrong</option>
+          <option value="9901_Wasin Engchuan">9901 — Wasin Engchuan</option>
+          <option value="9902_Krailerk Tubyai">9902 — Krailerk Tubyai</option>
+          <option value="9905_Narit Kruearunrat">9905 — Narit Kruearunrat</option>
+          <option value="9906_Wasin Ngoenchang">9906 — Wasin Ngoenchang</option>
+          <option value="9912_Sattawat Prachakun">9912 — Sattawat Prachakun</option>
+          <option value="2569_AE and PM">2569 — AE and PM</option>
+        </select>
+      </div>
+      <div class="form-group"><label>เบอร์ติดต่อผู้ส่งเลื่อนนัด <span class="req">*</span></label><input type="tel" id="f_sender_phone" placeholder="0XX-XXX-XXXX" oninput="prog()"></div>
+      <div class="form-group">
+        <label>Email ผู้ส่งเลื่อนนัด <span class="req">*</span></label>
+        <input type="email" id="f_sender_email" placeholder="your@email.com" oninput="prog()">
+        <div class="email-notice"><svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>Admin จะส่ง Email แจ้งผลการเลื่อนนัดกลับมาที่นี่</div>
+      </div>
+    </div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-hdr"><div class="card-icon ci-am"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><circle cx="12" cy="16" r="1" fill="currentColor" stroke="none"/></svg></div><div><div class="card-title">เหตุผลการเลื่อนนัด</div><div class="card-sub">เลือกรหัสเหตุผลและอธิบายเพิ่มเติม</div></div></div>
+    <div class="card-body"><div class="form-grid">
+      <div class="form-group full"><label>RD_Reason_Desc <span class="req">*</span></label>
+        <select id="f_rd_reason" onchange="prog()">
+          <option value="">— เลือกเหตุผล —</option>
+          <optgroup label="QB / BB"><option value="6501_[QB] ผู้เช่าขอเลื่อนนัด นัดหมายใหม่ได้">6501 [QB] ผู้เช่าขอเลื่อนนัด นัดหมายใหม่ได้</option><option value="3801_[BB] เบิกอุปกรณ์ไม่ทัน/ล่าช้า">3801 [BB] เบิกอุปกรณ์ไม่ทัน/ล่าช้า</option></optgroup>
+          <optgroup label="QC — ความพร้อมสถานที่"><option value="6601_[QC] ผู้เช่าขอเลื่อนนัด นัดหมายใหม่ไม่ได้">6601 [QC] ผู้เช่าขอเลื่อนนัด นัดหมายใหม่ไม่ได้</option><option value="6602_[QC] สายภายในอาคาร หรือคอนโดไม่พร้อม">6602 [QC] สายภายในอาคาร หรือคอนโดไม่พร้อม</option><option value="6603_[QC] นิติบุคคลหรือบ้านเช่าไม่อนุญาตให้ติดตั้ง">6603 [QC] นิติบุคคลหรือบ้านเช่าไม่อนุญาตให้ติดตั้ง</option><option value="6606_[QC] สำนักงานลูกค้าไม่เรียบร้อย">6606 [QC] สำนักงานลูกค้าไม่เรียบร้อย</option><option value="6607_[QC] สำนักงานลูกค้าเรียบร้อยแต่ลูกค้ายังไม่สะดวก">6607 [QC] สำนักงานลูกค้าเรียบร้อยแต่ยังไม่สะดวก</option></optgroup>
+          <optgroup label="QE / XC / XF / XO"><option value="6801_[QE] เอกสารประกอบการติดตั้งไม่ครบ">6801 [QE] เอกสารประกอบการติดตั้งไม่ครบ</option><option value="8802_[XC] ลูกค้าไม่ยินยอมให้เก็บอุปกรณ์">8802 [XC] ลูกค้าไม่ยินยอมให้เก็บอุปกรณ์</option><option value="8804_[XC] ลูกค้าให้มาเก็บวันหลัง">8804 [XC] ลูกค้าให้มาเก็บวันหลัง</option><option value="8807_[XC] ลูกค้าแจ้งเก็บอุปกรณ์ไว้ที่อื่น">8807 [XC] ลูกค้าแจ้งเก็บอุปกรณ์ไว้ที่อื่น</option><option value="9101_[XF] Optic Fiber ยังไม่เสร็จ">9101 [XF] Optic Fiber ยังไม่เสร็จ</option><option value="9906_[XO] ต้องการ Modem เฉพาะรุ่น">9906 [XO] ต้องการ Modem เฉพาะรุ่น</option></optgroup>
+        </select>
+      </div>
+      <div class="form-group full"><label>Remark — เหตุผลการเลื่อน</label><textarea id="f_remark" placeholder="อธิบายรายละเอียดเพิ่มเติม..."></textarea></div>
+    </div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-hdr"><div class="card-icon ci-tl"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg></div><div><div class="card-title">ผู้รับทราบ (PM / AE)</div><div class="card-sub">ระบุ PM หรือ AE ที่รับทราบการเลื่อนนัด</div></div></div>
+    <div class="card-body"><div class="form-grid">
+      <div class="form-group"><label>ชื่อ PM / AE ที่รับทราบ <span class="req">*</span></label><input type="text" id="f_ae_name" placeholder="ชื่อ PM หรือ AE" oninput="prog()"></div>
+      <div class="form-group"><label>เบอร์ PM / AE ที่รับทราบ <span class="req">*</span></label><input type="tel" id="f_ae_phone" placeholder="0XX-XXX-XXXX" oninput="prog()"></div>
+    </div></div>
+  </div>
+
+  <div class="submit-card">
+    <div class="submit-info"><strong>พร้อมบันทึกข้อมูล?</strong><span class="rec-badge" id="recCount">0 รายการ</span></div>
+    <div class="btn-group">
+      <button class="btn" onclick="clearForm()"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.25"/></svg>ล้างข้อมูล</button>
+      <button class="btn" onclick="previewForm()"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>ตรวจสอบ</button>
+      <button class="btn btn-suc" id="saveBtn" onclick="saveRecord()"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>บันทึกข้อมูล</button>
+    </div>
+  </div>
+</div>
+
+<div class="ov" id="ovPreview" onclick="if(event.target===this)this.classList.remove('show')">
+  <div class="modal">
+    <div class="mh"><div class="mt">ตรวจสอบข้อมูลก่อนบันทึก</div><button class="mcl" onclick="document.getElementById('ovPreview').classList.remove('show')">✕</button></div>
+    <div class="mb" id="previewBody"></div>
+    <div class="mf">
+      <button class="btn" style="padding:9px 18px;font-size:13px" onclick="document.getElementById('ovPreview').classList.remove('show')">แก้ไข</button>
+      <button class="btn btn-suc" style="padding:9px 18px;font-size:13px" onclick="confirmSave()">ยืนยันและบันทึก</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-ct" id="toastCt"></div>
+<footer>ระบบเลื่อนนัดติดตั้ง | ข้อมูลบันทึกใน Google Sheets</footer>
+
+<script>
+// ── Auth ──────────────────────────────────────────────────────
+const API   = sessionStorage.getItem('rsch_api')      || '';
+const UNAME = sessionStorage.getItem('rsch_username') || '';
+const FNAME = sessionStorage.getItem('rsch_fullname') || '';
+const ROLE  = sessionStorage.getItem('rsch_role')     || '';
+
+(function checkAuth(){
+  if(!sessionStorage.getItem('rsch_user')){
+    document.getElementById('authBlock').classList.add('show'); return;
+  }
+  document.getElementById('tbUser').textContent = '👤 ' + FNAME;
+  if(ROLE === 'admin') document.getElementById('adminBtn').style.display = '';
+  loadCount();
+})();
+
+function doLogout(){
+  sessionStorage.clear();
+  window.location.href = 'login.html';
+}
+
+// ── API helpers ───────────────────────────────────────────────
+async function POST(body){
+  const r = await fetch(API, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)});
+  const j = await r.json();
+  if(!j.ok) throw new Error(j.error || 'เกิดข้อผิดพลาด');
+  return j.data;
+}
+async function GET(params){
+  const u = new URL(API);
+  Object.entries(params).forEach(([k,v])=>u.searchParams.set(k,v));
+  const r = await fetch(u.toString());
+  const j = await r.json();
+  if(!j.ok) throw new Error(j.error || 'เกิดข้อผิดพลาด');
+  return j.data;
+}
+
+// ── Clock ─────────────────────────────────────────────────────
+setInterval(()=>{ document.getElementById('clock').textContent = new Date().toLocaleTimeString('th-TH',{hour12:false}); }, 1000);
+
+// ── Count ─────────────────────────────────────────────────────
+async function loadCount(){
+  try{
+    const recs = await GET({action:'getRecords'});
+    document.getElementById('recCount').textContent = (recs||[]).length + ' รายการ';
+  }catch(e){ document.getElementById('recCount').textContent = '—'; }
+}
+
+// ── Progress ──────────────────────────────────────────────────
+const fv = id => document.getElementById('f_'+id).value.trim();
+function prog(){
+  const s = [
+    fv('circuit')&&fv('customer')&&fv('due_date')&&fv('new_due_date'),
+    fv('staff')&&fv('sender_phone')&&fv('sender_email'),
+    fv('rd_reason'),
+    fv('ae_name')&&fv('ae_phone')
+  ];
+  s.forEach((done,i)=>{
+    const el = document.getElementById('ps'+(i+1));
+    if(done){ el.classList.add('done'); el.classList.remove('act'); el.querySelector('.prog-dot').textContent='✓'; }
+    else { el.classList.remove('done'); el.querySelector('.prog-dot').textContent=i+1; if(i===0||s.slice(0,i).every(Boolean)) el.classList.add('act'); else el.classList.remove('act'); }
+  });
+}
+
+// ── Form Data ─────────────────────────────────────────────────
+function getFormData(){
+  return {
+    timestamp: new Date().toLocaleString('th-TH'),
+    submittedBy: UNAME,
+    circuit: fv('circuit'), customer: fv('customer'),
+    due_date: fv('due_date'), new_due_date: fv('new_due_date'),
+    staff: fv('staff'), sender_phone: fv('sender_phone'), sender_email: fv('sender_email'),
+    rd_reason: fv('rd_reason'), ae_name: fv('ae_name'), ae_phone: fv('ae_phone'),
+    remark: fv('remark')
+  };
+}
+
+function validate(){
+  const req = {circuit:'Circuit',customer:'Customer Name',due_date:'Due Date',new_due_date:'Change Due Date',staff:'Staff',sender_phone:'เบอร์ผู้ส่ง',sender_email:'Email ผู้ส่ง',rd_reason:'RD_Reason_Desc',ae_name:'ชื่อ PM/AE',ae_phone:'เบอร์ PM/AE'};
+  const missing = Object.entries(req).filter(([id])=>!fv(id)).map(([,l])=>l);
+  if(missing.length){ toast('กรุณากรอก: '+missing.join(', '),'err'); return false; }
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(fv('sender_email'))){ toast('รูปแบบ Email ไม่ถูกต้อง','err'); return false; }
+  return true;
+}
+
+function previewForm(){
+  if(!validate()) return;
+  const d = getFormData();
+  const labels = {timestamp:'บันทึกเมื่อ',submittedBy:'ผู้บันทึก',circuit:'Circuit',customer:'Customer Name',due_date:'Due Date',new_due_date:'Change Due Date',staff:'Staff',sender_phone:'เบอร์ผู้ส่ง',sender_email:'Email ผู้ส่ง',rd_reason:'RD_Reason_Desc',ae_name:'ชื่อ PM/AE',ae_phone:'เบอร์ PM/AE',remark:'Remark'};
+  document.getElementById('previewBody').innerHTML = Object.entries(labels).map(([k,l])=>`<div class="sum-row"><span class="sum-key">${l}</span><span class="sum-val">${d[k]||'—'}</span></div>`).join('');
+  document.getElementById('ovPreview').classList.add('show');
+}
+
+function confirmSave(){ document.getElementById('ovPreview').classList.remove('show'); doSave(); }
+function saveRecord(){ if(!validate()) return; doSave(); }
+
+async function doSave(){
+  const btn = document.getElementById('saveBtn');
+  btn.disabled = true; btn.textContent = 'กำลังบันทึก...';
+  try{
+    await POST({ action:'saveRecord', data: getFormData() });
+    toast('บันทึกข้อมูลสำเร็จ! ✅ ข้อมูลส่งไป Google Sheets แล้ว');
+    clearForm(true);
+    loadCount();
+  }catch(err){
+    toast('บันทึกไม่สำเร็จ: '+err.message,'err');
+  }finally{
+    btn.disabled=false; btn.innerHTML='<svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>บันทึกข้อมูล';
+  }
+}
+
+function clearForm(silent=false){
+  if(!silent&&!confirm('ต้องการล้างข้อมูลทั้งหมดใช่หรือไม่?')) return;
+  ['circuit','customer','due_date','new_due_date','staff','sender_phone','sender_email','rd_reason','ae_name','ae_phone','remark'].forEach(id=>{ document.getElementById('f_'+id).value=''; });
+  ['ps1','ps2','ps3','ps4'].forEach((id,i)=>{ const el=document.getElementById(id); el.classList.remove('done','act'); el.querySelector('.prog-dot').textContent=i+1; });
+  document.getElementById('ps1').classList.add('act');
+  if(!silent) toast('ล้างข้อมูลเรียบร้อยแล้ว');
+}
+
+function toast(msg,type=''){
+  const c=document.getElementById('toastCt'); const t=document.createElement('div');
+  t.className='toast'+(type?' '+type:''); t.innerHTML=`<div class="tdot"></div>${msg}`; c.appendChild(t);
+  setTimeout(()=>{ t.style.opacity='0'; t.style.transition='opacity .3s'; setTimeout(()=>t.remove(),300); },4000);
+}
+</script>
+</body>
+</html>

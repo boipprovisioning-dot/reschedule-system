@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Dashboard — ระบบเลื่อนนัด</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--b50:#E6F1FB;--b100:#B5D4F4;--b400:#378ADD;--b600:#185FA5;--b800:#0C447C;--b900:#042C53;--c50:#FAECE7;--c100:#F5C4B3;--c400:#D85A30;--c600:#993C1D;--t50:#E1F5EE;--t100:#9FE1CB;--t400:#1D9E75;--t600:#0F6E56;--a50:#FAEEDA;--a100:#FAC775;--a400:#EF9F27;--a600:#854F0B;--p50:#F0EDFB;--p100:#C9BFF0;--p400:#7C5CBF;--p600:#5438A0;--g50:#F7F6F2;--g100:#EEEDE8;--g200:#D8D7D0;--g300:#C4C3BB;--g500:#888780;--g600:#5F5E5A;--g700:#4A4A47;--g900:#1C1C1A}
+html{font-size:16px}
+body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--g50);color:var(--g900);min-height:100vh;display:flex;flex-direction:column}
+.auth-block{display:none;position:fixed;inset:0;background:rgba(4,44,83,.85);z-index:500;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+.auth-block.show{display:flex}
+.auth-box{background:#fff;border-radius:20px;padding:2rem;text-align:center;max-width:360px;width:100%}
+.auth-box h2{font-size:18px;font-weight:600;margin-bottom:.5rem}
+.auth-box p{font-size:13px;color:var(--g500);margin-bottom:1.5rem;line-height:1.6}
+.layout{display:flex;flex:1}
+.sidebar{width:228px;background:var(--b900);flex-shrink:0;display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto}
+.sb-logo{padding:1.25rem 1.25rem .875rem;border-bottom:1px solid rgba(255,255,255,.1)}
+.sb-dot{width:8px;height:8px;border-radius:50%;background:#378ADD;display:inline-block;margin-right:8px;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.8)}}
+.sb-name{font-size:13px;font-weight:600;color:#fff}
+.sb-sub{font-size:11px;color:rgba(255,255,255,.35);margin-top:3px}
+.sb-user{padding:.75rem 1.25rem;border-bottom:1px solid rgba(255,255,255,.08);font-size:12px;color:rgba(255,255,255,.45)}
+.sb-user strong{color:rgba(255,255,255,.85);display:block;font-size:13px;margin-bottom:1px}
+.sb-nav{flex:1;padding:.875rem 0}
+.nav-sec{font-size:10px;font-weight:600;color:rgba(255,255,255,.28);letter-spacing:.1em;text-transform:uppercase;padding:.625rem 1.25rem .2rem}
+.ni{display:flex;align-items:center;gap:9px;padding:.575rem 1.25rem;font-size:13px;color:rgba(255,255,255,.6);cursor:pointer;transition:all .15s;border-left:2px solid transparent}
+.ni:hover{color:#fff;background:rgba(255,255,255,.07)}
+.ni.on{color:#fff;background:rgba(55,138,221,.18);border-left-color:#378ADD}
+.ni svg{width:14px;height:14px;flex-shrink:0;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.ni-badge{background:var(--c400);color:#fff;font-size:10px;font-weight:700;padding:1px 6px;border-radius:20px;margin-left:auto;min-width:18px;text-align:center}
+.sb-bot{padding:.875rem 1.25rem;border-top:1px solid rgba(255,255,255,.1);display:flex;flex-direction:column;gap:.5rem}
+.sb-link{display:flex;align-items:center;gap:8px;font-size:12px;color:rgba(255,255,255,.45);cursor:pointer;background:none;border:none;font-family:inherit;transition:color .15s;padding:0;text-align:left}
+.sb-link:hover{color:#fff}
+.sb-out{display:flex;align-items:center;gap:8px;font-size:12px;color:rgba(216,90,48,.7);background:none;border:none;cursor:pointer;font-family:inherit;padding:0;transition:color .15s}
+.sb-out:hover{color:var(--c400)}
+.main{flex:1;overflow-x:hidden;min-width:0}
+.topbar{background:#fff;border-bottom:1px solid var(--g200);padding:0 2rem;height:52px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
+.tb-title{font-size:15px;font-weight:600;color:var(--g900)}
+.tb-right{display:flex;align-items:center;gap:10px}
+.tb-time{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--g500)}
+.btn-sm{padding:6px 14px;border-radius:8px;font-size:13px;font-weight:500;font-family:inherit;cursor:pointer;border:1.5px solid var(--g200);background:transparent;color:var(--g700);transition:all .15s;display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+.btn-sm:hover{background:var(--g100);border-color:var(--g300)}
+.btn-sm:active{transform:scale(.97)}
+.btn-sm:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.btn-pri{background:var(--b600);border-color:var(--b600);color:#fff}.btn-pri:hover{background:var(--b800);border-color:var(--b800)}
+.btn-suc{background:var(--t400);border-color:var(--t400);color:#fff}.btn-suc:hover{background:var(--t600);border-color:var(--t600)}
+.btn-dan{background:transparent;border-color:var(--c400);color:var(--c600)}.btn-dan:hover{background:var(--c50)}
+.btn-mai{background:var(--p50);border-color:var(--p100);color:var(--p600)}.btn-mai:hover{background:var(--p100)}
+.btn-war{background:var(--a50);border-color:var(--a100);color:var(--a600)}.btn-war:hover{background:var(--a100)}
+.content{padding:1.5rem 2rem 3rem}
+.sg{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:1.5rem}
+@media(max-width:900px){.sg{grid-template-columns:repeat(2,1fr)}}
+.sc{background:#fff;border:1px solid var(--g200);border-radius:14px;padding:1.1rem 1.4rem;position:relative;overflow:hidden}
+.sc-acc{position:absolute;top:0;right:0;width:4px;height:100%;border-radius:0 14px 14px 0}
+.sc.bl .sc-acc{background:var(--b400)}.sc.tl .sc-acc{background:var(--t400)}.sc.am .sc-acc{background:var(--a400)}.sc.co .sc-acc{background:var(--c400)}
+.sc-label{font-size:11px;font-weight:600;color:var(--g500);text-transform:uppercase;letter-spacing:.07em;margin-bottom:.4rem}
+.sc-val{font-size:26px;font-weight:600;color:var(--g900);font-family:'IBM Plex Mono',monospace}
+.sc-sub{font-size:11px;color:var(--g500);margin-top:3px}
+.toolbar{background:#fff;border:1px solid var(--g200);border-radius:14px;padding:.875rem 1.25rem;margin-bottom:.875rem;display:flex;align-items:center;gap:.625rem;flex-wrap:wrap}
+.sw{position:relative;flex:1;min-width:180px}
+.sw svg{position:absolute;left:9px;top:50%;transform:translateY(-50%);width:14px;height:14px;stroke:var(--g500);fill:none;stroke-width:2}
+.si{width:100%;padding:7px 9px 7px 29px;font-size:13px;font-family:inherit;border:1.5px solid var(--g200);border-radius:8px;background:var(--g50);color:var(--g900);outline:none;transition:all .2s}
+.si:focus{border-color:var(--b400);background:#fff;box-shadow:0 0 0 3px rgba(55,138,221,.12)}
+.fsel{padding:7px 26px 7px 9px;font-size:13px;font-family:inherit;border:1.5px solid var(--g200);border-radius:8px;background:var(--g50);color:var(--g700);cursor:pointer;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='7' viewBox='0 0 10 7'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23888780' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;min-width:125px;outline:none}
+.fsel:focus{border-color:var(--b400)}
+.tc{background:#fff;border:1px solid var(--g200);border-radius:14px;overflow:hidden}
+.tc-hdr{padding:.875rem 1.5rem;border-bottom:1px solid var(--g100);display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap}
+.tc-title{font-size:14px;font-weight:600;color:var(--g900)}
+.tc-cnt{font-size:12px;color:var(--g500);background:var(--g100);padding:3px 8px;border-radius:20px}
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+thead tr{background:var(--g50);border-bottom:1px solid var(--g200)}
+th{padding:9px 12px;text-align:left;font-size:11px;font-weight:600;color:var(--g500);text-transform:uppercase;letter-spacing:.06em;white-space:nowrap;cursor:pointer;user-select:none}
+th:hover{color:var(--g700)}
+th.sa::after{content:' ↑'}th.sd::after{content:' ↓'}
+td{padding:9px 12px;border-bottom:1px solid var(--g100);color:var(--g700);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--g50)}
+.mono{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--b600)}
+.badge{display:inline-block;padding:3px 8px;border-radius:20px;font-size:11px;font-weight:500}
+.bb{background:var(--b50);color:var(--b600)}.bt{background:var(--t50);color:var(--t600)}.ba{background:var(--a50);color:var(--a600)}.bc2{background:var(--c50);color:var(--c600)}.bp{background:var(--p50);color:var(--p600)}
+.echip{display:inline-flex;align-items:center;gap:4px;background:var(--p50);color:var(--p600);font-size:11px;padding:2px 8px;border-radius:20px;border:1px solid var(--p100)}
+.ag{display:flex;gap:5px;align-items:center;flex-wrap:wrap}
+.sdot{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:500;padding:3px 9px;border-radius:20px}
+.sdot.pend{background:#FEE2E2;color:#991B1B}
+.sdot.pend .dot{width:7px;height:7px;border-radius:50%;background:#EF4444;animation:blink 1.2s ease-in-out infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
+.sdot.sent{background:#D1FAE5;color:#065F46}
+.sdot.sent .dot{width:7px;height:7px;border-radius:50%;background:#10B981}
+.pag{display:flex;align-items:center;justify-content:space-between;padding:.625rem 1.5rem;border-top:1px solid var(--g100);font-size:12px;color:var(--g500)}
+.pb{display:flex;gap:4px}
+.pbtn{width:28px;height:28px;border-radius:6px;border:1px solid var(--g200);background:transparent;color:var(--g700);font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;font-family:inherit}
+.pbtn:hover{background:var(--g100)}.pbtn.on{background:var(--b600);border-color:var(--b600);color:#fff}.pbtn:disabled{opacity:.4;cursor:not-allowed}
+.ov{display:none;position:fixed;inset:0;background:rgba(4,44,83,.52);z-index:200;align-items:center;justify-content:center;padding:1rem;backdrop-filter:blur(2px)}
+.ov.show{display:flex}
+.modal{background:#fff;border-radius:20px;width:100%;max-width:600px;max-height:90vh;overflow-y:auto;animation:mi .25s ease both}
+.modal.sm{max-width:430px}
+@keyframes mi{from{opacity:0;transform:scale(.95) translateY(20px)}to{opacity:1;transform:none}}
+.mh{padding:1.25rem 1.5rem;border-bottom:1px solid var(--g100);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:#fff;z-index:5}
+.mt{font-size:15px;font-weight:600;color:var(--g900)}
+.mc-id{font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--b600);background:var(--b50);padding:3px 10px;border-radius:6px}
+.mcl{width:32px;height:32px;border-radius:8px;border:none;background:var(--g100);cursor:pointer;font-size:16px;color:var(--g700);display:flex;align-items:center;justify-content:center}
+.mcl:hover{background:var(--g200)}
+.mb{padding:1.5rem}
+.mf{padding:1rem 1.5rem;border-top:1px solid var(--g100);display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+.ds{margin-bottom:1.1rem}
+.ds-title{font-size:11px;font-weight:600;color:var(--g500);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.625rem;padding-bottom:.4rem;border-bottom:1px solid var(--g100)}
+.dg{display:grid;grid-template-columns:1fr 1fr;gap:.625rem}
+.di{display:flex;flex-direction:column;gap:3px}.di.full{grid-column:1/-1}
+.dk{font-size:11px;color:var(--g500)}.dv{font-size:13px;font-weight:500;color:var(--g900)}
+.dv.mo{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--b600)}
+.dv.it{color:var(--g600);font-weight:400;font-style:italic}
+.ec{background:var(--p50);border:1px solid var(--p100);border-radius:12px;padding:1.1rem}
+.ec-title{font-size:13px;font-weight:600;color:var(--p600);margin-bottom:.875rem;display:flex;align-items:center;gap:8px}
+.er{display:flex;flex-direction:column;gap:3px;margin-bottom:.625rem}
+.el{font-size:11px;font-weight:600;color:var(--p600);text-transform:uppercase;letter-spacing:.06em}
+.ev{font-size:13px;color:var(--g700);word-break:break-all}
+.ebp{background:#fff;border:1px solid var(--p100);border-radius:8px;padding:.625rem 1rem;font-size:12px;color:var(--g700);line-height:1.7;max-height:170px;overflow-y:auto;white-space:pre-wrap;font-family:inherit}
+.cchips{display:flex;flex-wrap:wrap;gap:5px}
+.cchip{display:inline-flex;align-items:center;background:var(--p50);color:var(--p600);font-size:11px;padding:2px 8px;border-radius:20px;border:1px solid var(--p100)}
+.pend-card{background:var(--a50);border:1px solid var(--a100);border-radius:14px;overflow:hidden;margin-bottom:1rem}
+.appr-card{background:#fff;border:1px solid var(--g200);border-radius:14px;overflow:hidden}
+.empty{text-align:center;padding:2.5rem 2rem;color:var(--g500)}
+.ei{font-size:36px;margin-bottom:.625rem;opacity:.4}.et{font-size:14px;font-weight:500;color:var(--g700);margin-bottom:.2rem}
+.fg{display:flex;flex-direction:column;gap:5px;margin-bottom:.875rem}
+.fg:last-child{margin-bottom:0}
+.fg label{font-size:13px;font-weight:500;color:var(--g700)}
+.fi{width:100%;padding:10px 12px;font-size:14px;font-family:inherit;border:1.5px solid var(--g200);border-radius:10px;background:#fff;color:var(--g900);outline:none;transition:border-color .2s;appearance:none;-webkit-appearance:none}
+.fi:focus{border-color:var(--b400);box-shadow:0 0 0 3px rgba(55,138,221,.12)}
+.fi-sel{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23888780' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:36px}
+.cdlg{background:#fff;border-radius:16px;width:100%;max-width:400px;padding:1.5rem;animation:mi .2s ease both}
+.ct{font-size:16px;font-weight:600;margin-bottom:.4rem}.cs{font-size:13px;color:var(--g500);margin-bottom:1.1rem;line-height:1.5}
+.cbtns{display:flex;gap:8px;justify-content:flex-end}
+.alert{display:none;border-radius:8px;padding:9px 12px;font-size:13px;margin-bottom:.875rem;align-items:center;gap:8px}
+.alert.show{display:flex}
+.alert svg{width:13px;height:13px;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+.a-err{background:var(--c50);border:1px solid var(--c100);color:var(--c600)}.a-err svg{stroke:var(--c600)}
+.toast-ct{position:fixed;bottom:2rem;right:2rem;z-index:999;display:flex;flex-direction:column;gap:8px}
+.toast{background:var(--g900);color:#fff;padding:12px 18px;border-radius:12px;font-size:13px;display:flex;align-items:center;gap:10px;min-width:240px;animation:ti .3s ease both;border-left:3px solid var(--t400)}
+@keyframes ti{from{opacity:0;transform:translateY(12px) scale(.96)}to{opacity:1;transform:none}}
+.toast.err{border-left-color:var(--c400)}.toast.inf{border-left-color:var(--p400)}
+.tdot{width:8px;height:8px;border-radius:50%;background:var(--t400);flex-shrink:0}
+.toast.err .tdot{background:var(--c400)}.toast.inf .tdot{background:var(--p400)}
+/* Loading spinner overlay */
+.loading-row td{text-align:center;padding:2rem;color:var(--g500)}
+@media(max-width:768px){.layout{flex-direction:column}.sidebar{width:100%;height:auto;position:relative}.sg{grid-template-columns:1fr 1fr}.content{padding:1rem}.dg{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<div class="auth-block" id="authBlock">
+  <div class="auth-box">
+    <div style="font-size:48px;margin-bottom:1rem">🔒</div>
+    <h2>กรุณาเข้าสู่ระบบก่อน</h2>
+    <p>เซสชันหมดอายุหรือไม่มีสิทธิ์ Admin</p>
+    <button style="width:100%;padding:12px;background:var(--b600);border:none;border-radius:10px;color:#fff;font-size:14px;font-weight:600;font-family:inherit;cursor:pointer" onclick="window.location.href='login.html'">ไปหน้าเข้าสู่ระบบ</button>
+  </div>
+</div>
+
+<div class="layout">
+  <div class="sidebar">
+    <div class="sb-logo"><div><span class="sb-dot"></span><span class="sb-name">Admin Panel</span></div><div class="sb-sub">ระบบเลื่อนนัดติดตั้ง</div></div>
+    <div class="sb-user"><strong id="sbUname">—</strong>ผู้ดูแลระบบ</div>
+    <nav class="sb-nav">
+      <div class="nav-sec">ข้อมูล</div>
+      <div class="ni on" id="ni0" onclick="aTab('records')"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/></svg>รายการทั้งหมด</div>
+      <div class="ni" id="ni1" onclick="aTab('stats')"><svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>สถิติสรุป</div>
+      <div class="nav-sec">ผู้ใช้งาน</div>
+      <div class="ni" id="ni2" onclick="aTab('users')"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>จัดการ User<span class="ni-badge" id="pendNb" style="display:none">0</span></div>
+      <div class="nav-sec">เครื่องมือ</div>
+      <div class="ni" onclick="exportExcel()"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>ส่งออก Excel</div>
+      <div class="ni" onclick="confClearAll()" style="color:rgba(216,90,48,.75)"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>ล้างข้อมูลทั้งหมด</div>
+    </nav>
+    <div class="sb-bot">
+      <button class="sb-link" onclick="window.location.href='reschedule_form.html'"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>กลับหน้าฟอร์ม</button>
+      <button class="sb-out" onclick="doLogout()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>ออกจากระบบ</button>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="topbar">
+      <div class="tb-title" id="pageTitle">รายการเลื่อนนัดทั้งหมด</div>
+      <div class="tb-right">
+        <span class="tb-time" id="clock">--:--:--</span>
+        <button class="btn-sm btn-suc" onclick="exportExcel()"><svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Export Excel</button>
+        <button class="btn-sm" onclick="loadData()"><svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.25"/></svg>รีเฟรช</button>
+      </div>
+    </div>
+
+    <!-- Records -->
+    <div id="tabRecords" class="content">
+      <div class="sg">
+        <div class="sc bl"><div class="sc-acc"></div><div class="sc-label">รายการทั้งหมด</div><div class="sc-val" id="stTotal">—</div><div class="sc-sub">รายการใน Sheets</div></div>
+        <div class="sc tl"><div class="sc-acc"></div><div class="sc-label">วันนี้</div><div class="sc-val" id="stToday">—</div><div class="sc-sub">บันทึกวันนี้</div></div>
+        <div class="sc am"><div class="sc-acc"></div><div class="sc-label">ดำเนินการแล้ว</div><div class="sc-val" id="stSent">—</div><div class="sc-sub">ส่ง Email แล้ว</div></div>
+        <div class="sc co"><div class="sc-acc"></div><div class="sc-label">รอดำเนินการ</div><div class="sc-val" id="stPend">—</div><div class="sc-sub">ยังไม่ส่ง Email</div></div>
+      </div>
+      <div class="toolbar">
+        <div class="sw"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input class="si" id="aSearch" placeholder="ค้นหา Circuit, ลูกค้า, Staff..." oninput="renderTable()"></div>
+        <select class="fsel" id="aFStaff" onchange="renderTable()"><option value="">Staff ทั้งหมด</option></select>
+        <select class="fsel" id="aFDate" onchange="renderTable()"><option value="">ช่วงเวลาทั้งหมด</option><option value="today">วันนี้</option><option value="week">สัปดาห์นี้</option><option value="month">เดือนนี้</option></select>
+        <select class="fsel" id="aFStatus" onchange="renderTable()"><option value="">สถานะทั้งหมด</option><option value="sent">ดำเนินการแล้ว ✅</option><option value="pending">รอดำเนินการ 🔴</option></select>
+      </div>
+      <div class="tc">
+        <div class="tc-hdr"><div class="tc-title">รายการเลื่อนนัด</div><span class="tc-cnt" id="tableCnt">0 รายการ</span></div>
+        <div class="tw"><table>
+          <thead><tr><th onclick="sortBy('id')">#</th><th onclick="sortBy('timestamp')">วันที่บันทึก</th><th onclick="sortBy('circuit')">Circuit</th><th onclick="sortBy('customer')">Customer</th><th onclick="sortBy('new_due_date')">Change Date</th><th onclick="sortBy('staff')">Staff</th><th>Email ผู้ส่ง</th><th>สถานะ</th><th>จัดการ</th></tr></thead>
+          <tbody id="tableBody"><tr class="loading-row"><td colspan="9">⏳ กำลังโหลดข้อมูลจาก Google Sheets...</td></tr></tbody>
+        </table></div>
+        <div class="pag"><div id="pagInfo">—</div><div class="pb" id="pagBtns"></div></div>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div id="tabStats" class="content" style="display:none">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+        <div class="tc"><div class="tc-hdr"><div class="tc-title">สรุปตาม Staff</div></div><div class="tw"><table><thead><tr><th>Staff</th><th>จำนวน</th></tr></thead><tbody id="stStaff"><tr class="loading-row"><td colspan="2">⏳ กำลังโหลด...</td></tr></tbody></table></div></div>
+        <div class="tc"><div class="tc-hdr"><div class="tc-title">สรุปตามเหตุผล</div></div><div class="tw"><table><thead><tr><th>RD Reason</th><th>จำนวน</th></tr></thead><tbody id="stReason"><tr class="loading-row"><td colspan="2">⏳ กำลังโหลด...</td></tr></tbody></table></div></div>
+      </div>
+    </div>
+
+    <!-- Users -->
+    <div id="tabUsers" class="content" style="display:none">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.1rem;flex-wrap:wrap;gap:.75rem">
+        <div><div style="font-size:16px;font-weight:600">จัดการผู้ใช้งาน</div><div style="font-size:13px;color:var(--g500);margin-top:2px">อนุมัติบัญชีใหม่ กำหนดสิทธิ์ และจัดการผู้ใช้</div></div>
+        <button class="btn-sm btn-pri" onclick="openAddUser()"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>เพิ่ม User ใหม่</button>
+      </div>
+      <div class="pend-card">
+        <div class="tc-hdr" style="background:var(--a50);border-bottom-color:var(--a100)"><div class="tc-title" style="color:var(--a600)">⏳ คำขอรออนุมัติ</div><span class="tc-cnt" id="uPendCnt" style="background:var(--a100);color:var(--a600)">0 รายการ</span></div>
+        <div class="tw"><table><thead><tr><th>ชื่อ</th><th>Username</th><th>สิทธิ์ที่ขอ</th><th>Email</th><th>วันที่ขอ</th><th>จัดการ</th></tr></thead><tbody id="uPendTable"><tr class="loading-row"><td colspan="6">⏳ กำลังโหลด...</td></tr></tbody></table></div>
+      </div>
+      <div class="appr-card">
+        <div class="tc-hdr"><div class="tc-title">👥 ผู้ใช้งานในระบบ</div><span class="tc-cnt" id="uApprCnt">0 คน</span></div>
+        <div class="tw"><table><thead><tr><th>ชื่อ</th><th>Username</th><th>Role</th><th>Email</th><th>สร้างเมื่อ</th><th>จัดการ</th></tr></thead><tbody id="uApprTable"><tr class="loading-row"><td colspan="6">⏳ กำลังโหลด...</td></tr></tbody></table></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Detail Modal -->
+<div class="ov" id="ovDetail" onclick="if(event.target===this)this.classList.remove('show')">
+  <div class="modal"><div class="mh"><div style="display:flex;align-items:center;gap:10px"><div class="mt">รายละเอียดการเลื่อนนัด</div><span id="detCircuit" class="mc-id"></span></div><button class="mcl" onclick="document.getElementById('ovDetail').classList.remove('show')">✕</button></div>
+  <div class="mb" id="detBody"></div>
+  <div class="mf"><button class="btn-sm btn-dan" id="detDelBtn">ลบรายการนี้</button><button class="btn-sm btn-mai" id="detEmailBtn" onclick="openEmailModal()"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>ส่ง Email แจ้งผล</button><button class="btn-sm" onclick="document.getElementById('ovDetail').classList.remove('show')">ปิด</button></div></div>
+</div>
+
+<!-- Email Modal -->
+<div class="ov" id="ovEmail" onclick="if(event.target===this)this.classList.remove('show')">
+  <div class="modal"><div class="mh"><div class="mt">📧 ส่ง Email แจ้งการเลื่อนนัด</div><button class="mcl" onclick="document.getElementById('ovEmail').classList.remove('show')">✕</button></div>
+  <div class="mb">
+    <div class="ec">
+      <div class="ec-title"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>ตัวอย่าง Email ที่จะส่ง</div>
+      <div class="er"><div class="el">To (ผู้รับ)</div><div class="ev" id="emailTo"></div></div>
+      <div class="er"><div class="el">CC</div><div class="cchips"><span class="cchip">nsa-team@truecorp.co.th</span><span class="cchip">bo-ip-pro@ericsson.com</span><span class="cchip">tanawat.thinsiriphat@ericsson.com</span></div></div>
+      <div class="er"><div class="el">Subject</div><div class="ev" id="emailSubj"></div></div>
+      <div class="er"><div class="el">Body</div><div class="ebp" id="emailBodyPrev"></div></div>
+    </div>
+    <p style="font-size:12px;color:var(--g500);margin-top:.875rem;line-height:1.6">⚠️ กด <strong>ส่ง Email</strong> เพื่อเปิด Mail Client พร้อมข้อมูล ระบบจะอัปเดตสถานะใน Google Sheets อัตโนมัติ</p>
+  </div>
+  <div class="mf"><button class="btn-sm" onclick="document.getElementById('ovEmail').classList.remove('show')">ยกเลิก</button><button class="btn-sm btn-mai" onclick="sendEmail()"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>ส่ง Email</button></div></div>
+</div>
+
+<!-- Add User Modal -->
+<div class="ov" id="ovAddUser" onclick="if(event.target===this)this.classList.remove('show')">
+  <div class="modal sm"><div class="mh"><div class="mt">เพิ่มผู้ใช้งานใหม่</div><button class="mcl" onclick="document.getElementById('ovAddUser').classList.remove('show')">✕</button></div>
+  <div class="mb">
+    <div class="alert a-err" id="addUErr"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg><span id="addUErrTxt"></span></div>
+    <div class="fg"><label>ชื่อ-นามสกุล <span style="color:var(--c400)">*</span></label><input class="fi" type="text" id="auFull" placeholder="ชื่อ-นามสกุล"></div>
+    <div class="fg"><label>Username <span style="color:var(--c400)">*</span></label><input class="fi" type="text" id="auUser" placeholder="ภาษาอังกฤษ/ตัวเลข ไม่มีช่องว่าง"></div>
+    <div class="fg"><label>Password <span style="color:var(--c400)">*</span></label><input class="fi" type="password" id="auPw" placeholder="อย่างน้อย 6 ตัวอักษร"></div>
+    <div class="fg"><label>Email</label><input class="fi" type="text" id="auEmail" placeholder="อีเมล (ถ้ามี)"></div>
+    <div class="fg"><label>Role <span style="color:var(--c400)">*</span></label><select class="fi fi-sel" id="auRole"><option value="user">เจ้าหน้าที่ (User)</option><option value="admin">Admin</option></select></div>
+  </div>
+  <div class="mf"><button class="btn-sm" onclick="document.getElementById('ovAddUser').classList.remove('show')">ยกเลิก</button><button class="btn-sm btn-suc" id="addUBtn" onclick="submitAddUser()">เพิ่มผู้ใช้</button></div></div>
+</div>
+
+<!-- Edit User Modal -->
+<div class="ov" id="ovEditUser" onclick="if(event.target===this)this.classList.remove('show')">
+  <div class="modal sm"><div class="mh"><div class="mt">แก้ไขผู้ใช้ — <span id="euUname" style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--b600)"></span></div><button class="mcl" onclick="document.getElementById('ovEditUser').classList.remove('show')">✕</button></div>
+  <div class="mb">
+    <div class="alert a-err" id="editUErr"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg><span id="editUErrTxt"></span></div>
+    <div class="fg"><label>ชื่อ-นามสกุล</label><input class="fi" type="text" id="euFull"></div>
+    <div class="fg"><label>Password ใหม่ (เว้นว่างหากไม่เปลี่ยน)</label><input class="fi" type="password" id="euPw" placeholder="ใส่เพื่อเปลี่ยน Password"></div>
+    <div class="fg"><label>Email</label><input class="fi" type="text" id="euEmail"></div>
+    <div class="fg"><label>Role</label><select class="fi fi-sel" id="euRole"><option value="user">เจ้าหน้าที่ (User)</option><option value="admin">Admin</option></select></div>
+    <input type="hidden" id="euHidden">
+  </div>
+  <div class="mf"><button class="btn-sm" onclick="document.getElementById('ovEditUser').classList.remove('show')">ยกเลิก</button><button class="btn-sm btn-pri" id="editUBtn" onclick="submitEditUser()">บันทึก</button></div></div>
+</div>
+
+<!-- Confirm -->
+<div class="ov" id="ovConfirm" onclick="if(event.target===this)this.classList.remove('show')">
+  <div class="cdlg"><div class="ct" id="confTitle">ยืนยัน</div><div class="cs" id="confSub"></div><div class="cbtns"><button class="btn-sm" onclick="document.getElementById('ovConfirm').classList.remove('show')">ยกเลิก</button><button class="btn-sm btn-dan" id="confOk">ยืนยัน</button></div></div>
+</div>
+
+<div class="toast-ct" id="toastCt"></div>
+
+<script>
+// ── Auth ──────────────────────────────────────────────────────
+const API   = sessionStorage.getItem('rsch_api')      || '';
+const UNAME = sessionStorage.getItem('rsch_username') || '';
+const FNAME = sessionStorage.getItem('rsch_fullname') || '';
+const CC    = 'nsa-team@truecorp.co.th;bo-ip-pro@ericsson.com;tanawat.thinsiriphat@ericsson.com';
+
+(function checkAuth(){
+  if(sessionStorage.getItem('rsch_admin') !== 'true'){
+    document.getElementById('authBlock').classList.add('show'); return;
+  }
+  document.getElementById('sbUname').textContent = FNAME || UNAME;
+  loadData();
+})();
+
+function doLogout(){ sessionStorage.clear(); window.location.href = 'login.html'; }
+setInterval(()=>{ document.getElementById('clock').textContent = new Date().toLocaleTimeString('th-TH',{hour12:false}); }, 1000);
+
+// ── API helpers ───────────────────────────────────────────────
+async function GET(params){
+  const u = new URL(API);
+  Object.entries(params).forEach(([k,v])=>u.searchParams.set(k,v));
+  const r = await fetch(u.toString());
+  const j = await r.json();
+  if(!j.ok) throw new Error(j.error||'เกิดข้อผิดพลาด');
+  return j.data;
+}
+async function POST(body){
+  const r = await fetch(API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  const j = await r.json();
+  if(!j.ok) throw new Error(j.error||'เกิดข้อผิดพลาด');
+  return j.data;
+}
+
+// ── Data ──────────────────────────────────────────────────────
+let allRecs=[], filtered=[], curPage=1, PAGE=15, sortCol='id', sortDir='desc', curId=null;
+
+async function loadData(){
+  try{
+    allRecs = await GET({action:'getRecords'});
+    allRecs = (allRecs||[]).map(r=>({...r, id: r.id||Date.now()}));
+    updateStats(); popFilters(); renderTable(); renderStats();
+    if(document.getElementById('tabUsers').style.display !== 'none') renderUsers();
+  }catch(err){
+    toast('โหลดข้อมูลไม่สำเร็จ: '+err.message,'err');
+    document.getElementById('tableBody').innerHTML=`<tr class="loading-row"><td colspan="9">❌ โหลดข้อมูลไม่สำเร็จ — <a href="#" onclick="loadData()">ลองอีกครั้ง</a></td></tr>`;
+  }
+}
+
+function updateStats(){
+  const pend = allRecs.filter(r=>r.emailStatus!=='sent').length;
+  document.getElementById('stTotal').textContent = allRecs.length;
+  document.getElementById('stToday').textContent = allRecs.filter(r=>{ try{return new Date(Number(r.id)).toDateString()===new Date().toDateString();}catch{return false;} }).length;
+  document.getElementById('stSent').textContent  = allRecs.filter(r=>r.emailStatus==='sent').length;
+  document.getElementById('stPend').textContent  = pend;
+}
+
+function popFilters(){
+  const staffs=[...new Set(allRecs.map(r=>r.staff).filter(Boolean))];
+  const fs=document.getElementById('aFStaff'), sv=fs.value;
+  fs.innerHTML='<option value="">Staff ทั้งหมด</option>'+staffs.map(s=>`<option value="${s}"${s===sv?' selected':''}>${s}</option>`).join('');
+}
+
+// ── Table ─────────────────────────────────────────────────────
+function renderTable(){
+  const q  = document.getElementById('aSearch').value.toLowerCase();
+  const fS = document.getElementById('aFStaff').value;
+  const fD = document.getElementById('aFDate').value;
+  const fSt= document.getElementById('aFStatus').value;
+  const now= Date.now();
+  filtered = allRecs.filter(r=>{
+    if(q&&!['circuit','customer','staff','rd_reason','ae_name','sender_email','submittedBy'].some(k=>(r[k]||'').toLowerCase().includes(q))) return false;
+    if(fS&&r.staff!==fS) return false;
+    if(fD==='today'){ try{if(new Date(Number(r.id)).toDateString()!==new Date().toDateString())return false;}catch{return false;} }
+    if(fD==='week'&&Number(r.id)<now-7*864e5) return false;
+    if(fD==='month'&&Number(r.id)<now-30*864e5) return false;
+    if(fSt==='sent'&&r.emailStatus!=='sent') return false;
+    if(fSt==='pending'&&r.emailStatus==='sent') return false;
+    return true;
+  });
+  filtered.sort((a,b)=>{
+    let va=a[sortCol]??'', vb=b[sortCol]??'';
+    if(sortCol==='id'){va=Number(va)||0; vb=Number(vb)||0;}
+    return sortDir==='asc'?(va>vb?1:-1):(va<vb?1:-1);
+  });
+  document.getElementById('tableCnt').textContent = filtered.length+' รายการ';
+  renderPage();
+}
+
+function renderPage(){
+  const tot=Math.max(1,Math.ceil(filtered.length/PAGE));
+  if(curPage>tot)curPage=tot;
+  const st=(curPage-1)*PAGE, en=Math.min(st+PAGE,filtered.length), page=filtered.slice(st,en);
+  document.getElementById('pagInfo').textContent = filtered.length?`แสดง ${st+1}–${en} จาก ${filtered.length}`:'ไม่พบข้อมูล';
+  const rb=r=>{const n=parseInt((r||'').split('_')[0]);if(n>=6500&&n<6700)return'bb';if(n>=6800&&n<7000)return'bt';if(n>=8800&&n<9200)return'ba';return'bc2';};
+  const tbody=document.getElementById('tableBody');
+  if(!page.length){ tbody.innerHTML=`<tr class="loading-row"><td colspan="9">📋 ไม่พบรายการที่ตรงกับเงื่อนไข</td></tr>`; document.getElementById('pagBtns').innerHTML=''; return; }
+  tbody.innerHTML=page.map((r,i)=>{
+    const isSent=r.emailStatus==='sent';
+    const sd=isSent?`<span class="sdot sent"><span class="dot"></span>ดำเนินการแล้ว</span>`:`<span class="sdot pend"><span class="dot"></span>รอดำเนินการ</span>`;
+    return`<tr onclick="showDetail('${r.id}')" style="cursor:pointer">
+      <td><span class="badge bb">${st+i+1}</span></td>
+      <td style="font-size:11px;color:var(--g500)">${r.timestamp||'—'}</td>
+      <td><span class="mono">${r.circuit||'—'}</span></td>
+      <td style="font-weight:500">${r.customer||'—'}</td>
+      <td style="font-size:12px;color:var(--t600);font-weight:500">${r.new_due_date||'—'}</td>
+      <td style="font-size:12px">${(r.staff||'').split('_')[1]||r.staff||'—'}</td>
+      <td>${r.sender_email?`<span class="echip" title="${r.sender_email}">✉ ${r.sender_email.length>22?r.sender_email.substring(0,20)+'…':r.sender_email}</span>`:'<span style="color:var(--g300);font-size:12px">—</span>'}</td>
+      <td>${sd}</td>
+      <td onclick="event.stopPropagation()"><div class="ag">
+        ${r.sender_email?`<button class="btn-sm btn-mai" style="padding:4px 8px;font-size:11px" onclick="quickEmail('${r.id}')">✉ ส่งเมล</button>`:''}
+        <button class="btn-sm btn-dan" style="padding:4px 8px;font-size:11px" onclick="delRec('${r.id}')">ลบ</button>
+      </div></td>
+    </tr>`;
+  }).join('');
+  // Pagination
+  const pb=document.getElementById('pagBtns'); pb.innerHTML='';
+  const ab=(lbl,p,dis,act)=>{const b=document.createElement('button');b.className='pbtn'+(act?' on':'');b.disabled=dis;b.textContent=lbl;b.onclick=()=>{curPage=p;renderPage();};pb.appendChild(b);};
+  ab('‹',curPage-1,curPage===1);
+  const range=[...new Set([1,2,curPage-1,curPage,curPage+1,tot-1,tot])].filter(p=>p>=1&&p<=tot).sort((a,b)=>a-b);
+  let prev=-1; range.forEach(p=>{if(prev>0&&p-prev>1){const sp=document.createElement('span');sp.textContent='…';sp.style.cssText='padding:0 4px;color:var(--g500)';pb.appendChild(sp);}ab(p,p,false,p===curPage);prev=p;});
+  ab('›',curPage+1,curPage===tot);
+}
+
+function sortBy(col){
+  if(sortCol===col)sortDir=sortDir==='asc'?'desc':'asc';else{sortCol=col;sortDir='asc';}
+  document.querySelectorAll('th').forEach(t=>t.classList.remove('sa','sd'));
+  event.target.classList.add(sortDir==='asc'?'sa':'sd'); renderTable();
+}
+
+// ── Detail ────────────────────────────────────────────────────
+function showDetail(id){
+  const r=allRecs.find(x=>String(x.id)===String(id)); if(!r) return;
+  curId=id;
+  document.getElementById('detCircuit').textContent=r.circuit||'—';
+  const isSent=r.emailStatus==='sent';
+  const sh=isSent?`<span class="sdot sent"><span class="dot"></span>ดำเนินการเลื่อนนัดเรียบร้อยแล้ว</span>`:`<span class="sdot pend"><span class="dot"></span>รอการดำเนินการ (ยังไม่ส่ง Email)</span>`;
+  document.getElementById('detBody').innerHTML=`
+    <div class="ds"><div class="ds-title">ข้อมูล Circuit</div><div class="dg">
+      <div class="di"><div class="dk">Circuit</div><div class="dv mo">${r.circuit||'—'}</div></div>
+      <div class="di"><div class="dk">Customer Name</div><div class="dv">${r.customer||'—'}</div></div>
+      <div class="di"><div class="dk">Due Date (เดิม)</div><div class="dv">${r.due_date||'—'}</div></div>
+      <div class="di"><div class="dk">Change Due Date</div><div class="dv" style="color:var(--t600)">${r.new_due_date||'—'}</div></div>
+    </div></div>
+    <div class="ds"><div class="ds-title">ผู้ดำเนินการ</div><div class="dg">
+      <div class="di"><div class="dk">Staff Code_Name</div><div class="dv">${r.staff||'—'}</div></div>
+      <div class="di"><div class="dk">เบอร์ผู้ส่ง</div><div class="dv mo">${r.sender_phone||'—'}</div></div>
+      <div class="di full"><div class="dk">Email ผู้ส่ง</div><div class="dv mo" style="color:var(--p600)">${r.sender_email||'—'}</div></div>
+      ${r.submittedBy?`<div class="di"><div class="dk">บันทึกโดย</div><div class="dv mo">${r.submittedBy}</div></div>`:''}
+    </div></div>
+    <div class="ds"><div class="ds-title">เหตุผล</div><div class="dg">
+      <div class="di full"><div class="dk">RD_Reason_Desc</div><div class="dv">${r.rd_reason||'—'}</div></div>
+      <div class="di full"><div class="dk">Remark</div><div class="dv it">${r.remark||'—'}</div></div>
+    </div></div>
+    <div class="ds"><div class="ds-title">PM / AE ที่รับทราบ</div><div class="dg">
+      <div class="di"><div class="dk">ชื่อ PM/AE</div><div class="dv">${r.ae_name||'—'}</div></div>
+      <div class="di"><div class="dk">เบอร์ PM/AE</div><div class="dv mo">${r.ae_phone||'—'}</div></div>
+    </div></div>
+    <div class="ds" style="margin-bottom:0"><div class="ds-title">สถานะ</div><div style="margin-top:.5rem">${sh}</div></div>`;
+  document.getElementById('detEmailBtn').style.display=r.sender_email?'':'none';
+  document.getElementById('detDelBtn').onclick=()=>{ document.getElementById('ovDetail').classList.remove('show'); delRec(id); };
+  document.getElementById('ovDetail').classList.add('show');
+}
+
+// ── Email ─────────────────────────────────────────────────────
+function buildEmail(r){
+  const subj=`[ดำเนินการเลื่อนนัดเรียบร้อยแล้ว] Circuit: ${r.circuit} | Customer: ${r.customer}`;
+  const body=`เรียน ทีมงานที่เกี่ยวข้อง
+
+ดำเนินการเลื่อนนัดเรียบร้อยแล้ว รายละเอียดดังนี้
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ ข้อมูล Circuit
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Circuit         : ${r.circuit}
+  Customer Name   : ${r.customer}
+  Due Date (เดิม) : ${r.due_date}
+  Change Due Date : ${r.new_due_date}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ ผู้ดำเนินการ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Staff           : ${r.staff}
+  เบอร์ติดต่อ     : ${r.sender_phone}
+  Email ผู้ส่ง    : ${r.sender_email}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ เหตุผลการเลื่อน
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  RD_Reason_Desc  : ${r.rd_reason}
+  Remark          : ${r.remark||'-'}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ ผู้รับทราบ (PM/AE)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  ชื่อ PM/AE      : ${r.ae_name}
+  เบอร์ PM/AE     : ${r.ae_phone}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+บันทึกเมื่อ : ${r.timestamp}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+ขอบคุณครับ/ค่ะ
+ระบบเลื่อนนัดติดตั้ง`;
+  return{subj,body,to:r.sender_email};
+}
+function openEmailModal(){
+  const r=allRecs.find(x=>String(x.id)===String(curId)); if(!r||!r.sender_email) return;
+  const{subj,body,to}=buildEmail(r);
+  document.getElementById('emailTo').textContent=to;
+  document.getElementById('emailSubj').textContent=subj;
+  document.getElementById('emailBodyPrev').textContent=body;
+  document.getElementById('ovDetail').classList.remove('show');
+  document.getElementById('ovEmail').classList.add('show');
+}
+function quickEmail(id){
+  curId=id; const r=allRecs.find(x=>String(x.id)===String(id)); if(!r||!r.sender_email) return;
+  const{subj,body,to}=buildEmail(r);
+  document.getElementById('emailTo').textContent=to;
+  document.getElementById('emailSubj').textContent=subj;
+  document.getElementById('emailBodyPrev').textContent=body;
+  document.getElementById('ovEmail').classList.add('show');
+}
+async function sendEmail(){
+  const r=allRecs.find(x=>String(x.id)===String(curId)); if(!r) return;
+  const{subj,body,to}=buildEmail(r);
+  window.location.href=`mailto:${encodeURIComponent(to)}?cc=${encodeURIComponent(CC)}&subject=${encodeURIComponent(subj)}&body=${encodeURIComponent(body)}`;
+  document.getElementById('ovEmail').classList.remove('show');
+  try{
+    await POST({action:'updateEmailStatus', id: curId, emailSentAt: new Date().toISOString()});
+    await POST({action:'logEmail', data:{circuit:r.circuit, customer:r.customer, sentTo:r.sender_email, sentBy:UNAME}});
+    const rec=allRecs.find(x=>String(x.id)===String(curId));
+    if(rec){ rec.emailStatus='sent'; rec.emailSentAt=new Date().toISOString(); }
+    updateStats(); renderTable();
+    toast('✅ ส่ง Email เรียบร้อย — อัปเดตสถานะใน Google Sheets แล้ว','inf');
+  }catch(err){
+    toast('เปิด Mail สำเร็จ แต่อัปเดตสถานะไม่ได้: '+err.message,'err');
+  }
+}
+
+// ── CRUD ──────────────────────────────────────────────────────
+async function delRec(id){
+  if(!confirm('ต้องการลบรายการนี้ใช่หรือไม่?')) return;
+  try{
+    await POST({action:'deleteRecord', id});
+    allRecs=allRecs.filter(r=>String(r.id)!==String(id));
+    updateStats(); popFilters(); renderTable(); renderStats();
+    toast('ลบรายการเรียบร้อยแล้ว');
+  }catch(err){ toast('ลบไม่สำเร็จ: '+err.message,'err'); }
+}
+function confClearAll(){
+  document.getElementById('confTitle').textContent='ล้างข้อมูลทั้งหมด?';
+  document.getElementById('confSub').textContent='จะลบทุกรายการออกจาก Google Sheets ไม่สามารถกู้คืนได้';
+  document.getElementById('confOk').onclick=async()=>{
+    document.getElementById('ovConfirm').classList.remove('show');
+    try{ await POST({action:'clearRecords'}); await loadData(); toast('ล้างข้อมูลเรียบร้อย'); }
+    catch(err){ toast('ลบไม่สำเร็จ: '+err.message,'err'); }
+  };
+  document.getElementById('ovConfirm').classList.add('show');
+}
+
+// ── Stats ─────────────────────────────────────────────────────
+function renderStats(){
+  const sc={},rc={};
+  allRecs.forEach(r=>{sc[r.staff||'—']=(sc[r.staff||'—']||0)+1; rc[r.rd_reason||'—']=(rc[r.rd_reason||'—']||0)+1;});
+  const mk=obj=>Object.entries(obj).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<tr><td title="${k}">${k.length>36?k.substring(0,34)+'…':k}</td><td><span class="badge bb">${v}</span></td></tr>`).join('')||'<tr class="loading-row"><td colspan="2">ไม่มีข้อมูล</td></tr>';
+  document.getElementById('stStaff').innerHTML=mk(sc);
+  document.getElementById('stReason').innerHTML=mk(rc);
+}
+
+// ── User Management ───────────────────────────────────────────
+async function renderUsers(){
+  try{
+    const [users, pend] = await Promise.all([GET({action:'getUsers'}), GET({action:'getPending'})]);
+    const pb=document.getElementById('pendNb');
+    pend.length?(pb.style.display='',pb.textContent=pend.length):pb.style.display='none';
+    document.getElementById('uPendCnt').textContent=pend.length+' รายการ';
+    const pt=document.getElementById('uPendTable');
+    if(!pend.length){ pt.innerHTML=`<tr class="loading-row"><td colspan="6">✅ ไม่มีคำขอรออนุมัติ</td></tr>`; }
+    else{ pt.innerHTML=pend.map(p=>`<tr>
+      <td style="font-weight:500">${p.fullname||'—'}</td>
+      <td><span class="mono">${p.username}</span></td>
+      <td><span class="badge ${p.role==='admin'?'bp':'bb'}">${p.role==='admin'?'Admin':'User'}</span></td>
+      <td style="font-size:12px;color:var(--g500)">${p.email||'—'}</td>
+      <td style="font-size:11px;color:var(--g500)">${p.requestedAt?new Date(p.requestedAt).toLocaleDateString('th-TH'):new Date(Number(p.id)).toLocaleDateString('th-TH')}</td>
+      <td><div class="ag">
+        <button class="btn-sm btn-suc" style="padding:4px 10px;font-size:11px" onclick="approveUser('${p.username}')">✓ อนุมัติ</button>
+        <button class="btn-sm btn-dan" style="padding:4px 10px;font-size:11px" onclick="rejectUser('${p.id}')">✕ ปฏิเสธ</button>
+      </div></td>
+    </tr>`).join(''); }
+    document.getElementById('uApprCnt').textContent=users.length+' คน';
+    const at=document.getElementById('uApprTable');
+    if(!users.length){ at.innerHTML=`<tr class="loading-row"><td colspan="6">👤 ยังไม่มีผู้ใช้งาน</td></tr>`; }
+    else{ at.innerHTML=users.map(u=>{const isSA=u.username==='VDES2740';return`<tr>
+      <td style="font-weight:500">${u.fullname||u.username}</td>
+      <td><span class="mono">${u.username}</span>${isSA?' ⭐':''}</td>
+      <td><span class="badge ${u.role==='admin'?'bp':'bb'}">${u.role==='admin'?'Admin':'User'}</span></td>
+      <td style="font-size:12px;color:var(--g500)">${u.email||'—'}</td>
+      <td style="font-size:11px;color:var(--g500)">${u.createdAt?new Date(u.createdAt).toLocaleDateString('th-TH'):'—'}</td>
+      <td><div class="ag">
+        <button class="btn-sm btn-war" style="padding:4px 10px;font-size:11px" onclick="openEditUser('${u.username}','${u.fullname||''}','${u.email||''}','${u.role||'user'}')">แก้ไข</button>
+        ${!isSA?`<button class="btn-sm btn-dan" style="padding:4px 10px;font-size:11px" onclick="removeUser('${u.username}')">ลบ</button>`:''}
+      </div></td>
+    </tr>`;}).join(''); }
+  }catch(err){ toast('โหลดข้อมูล User ไม่สำเร็จ: '+err.message,'err'); }
+}
+
+async function approveUser(username){
+  try{
+    await POST({action:'approveUser', username});
+    toast(`อนุมัติบัญชี ${username} เรียบร้อยแล้ว`);
+    renderUsers();
+  }catch(err){ toast('ไม่สำเร็จ: '+err.message,'err'); }
+}
+async function rejectUser(id){
+  if(!confirm('ต้องการปฏิเสธคำขอนี้ใช่หรือไม่?')) return;
+  try{ await POST({action:'rejectUser', id}); renderUsers(); toast('ปฏิเสธคำขอแล้ว'); }
+  catch(err){ toast('ไม่สำเร็จ: '+err.message,'err'); }
+}
+function openAddUser(){
+  document.getElementById('addUErr').classList.remove('show');
+  ['auFull','auUser','auPw','auEmail'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('auRole').value='user';
+  document.getElementById('ovAddUser').classList.add('show');
+}
+async function submitAddUser(){
+  document.getElementById('addUErr').classList.remove('show');
+  const full=document.getElementById('auFull').value.trim(), user=document.getElementById('auUser').value.trim();
+  const pw=document.getElementById('auPw').value, email=document.getElementById('auEmail').value.trim(), role=document.getElementById('auRole').value;
+  if(!full||!user||!pw){ sErr('addUErr','addUErrTxt','กรุณากรอกข้อมูลที่จำเป็น'); return; }
+  if(pw.length<6){ sErr('addUErr','addUErrTxt','Password ต้องมีอย่างน้อย 6 ตัวอักษร'); return; }
+  const btn=document.getElementById('addUBtn'); btn.disabled=true; btn.textContent='กำลังบันทึก...';
+  try{
+    await POST({action:'addUser', data:{username:user,password:pw,fullname:full,email,role}});
+    document.getElementById('ovAddUser').classList.remove('show');
+    renderUsers(); toast(`เพิ่มผู้ใช้ ${user} (${role==='admin'?'Admin':'User'}) สำเร็จ`);
+  }catch(err){ sErr('addUErr','addUErrTxt',err.message); }
+  finally{ btn.disabled=false; btn.textContent='เพิ่มผู้ใช้'; }
+}
+function openEditUser(username,fullname,email,role){
+  document.getElementById('editUErr').classList.remove('show');
+  document.getElementById('euUname').textContent=username;
+  document.getElementById('euHidden').value=username;
+  document.getElementById('euFull').value=fullname;
+  document.getElementById('euPw').value='';
+  document.getElementById('euEmail').value=email;
+  document.getElementById('euRole').value=role;
+  document.getElementById('euRole').disabled=(username==='VDES2740');
+  document.getElementById('ovEditUser').classList.add('show');
+}
+async function submitEditUser(){
+  document.getElementById('editUErr').classList.remove('show');
+  const username=document.getElementById('euHidden').value;
+  const full=document.getElementById('euFull').value.trim(), pw=document.getElementById('euPw').value;
+  const email=document.getElementById('euEmail').value.trim(), role=document.getElementById('euRole').value;
+  if(pw&&pw.length<6){ sErr('editUErr','editUErrTxt','Password ต้องมีอย่างน้อย 6 ตัวอักษร'); return; }
+  const btn=document.getElementById('editUBtn'); btn.disabled=true; btn.textContent='กำลังบันทึก...';
+  try{
+    await POST({action:'editUser', data:{username,fullname:full,email,role,...(pw?{password:pw}:{})}});
+    document.getElementById('ovEditUser').classList.remove('show');
+    renderUsers(); toast(`แก้ไขข้อมูล ${username} เรียบร้อย`);
+  }catch(err){ sErr('editUErr','editUErrTxt',err.message); }
+  finally{ btn.disabled=false; btn.textContent='บันทึก'; }
+}
+async function removeUser(username){
+  if(!confirm(`ลบผู้ใช้ ${username} ใช่หรือไม่?`)) return;
+  try{ await POST({action:'deleteUser', username}); renderUsers(); toast(`ลบผู้ใช้ ${username} แล้ว`); }
+  catch(err){ toast('ไม่สำเร็จ: '+err.message,'err'); }
+}
+
+// ── Export Excel ──────────────────────────────────────────────
+function exportExcel(){
+  if(!allRecs.length){ toast('ยังไม่มีข้อมูล','err'); return; }
+  const headers=['#','วันที่บันทึก','ผู้บันทึก','Circuit','Customer Name','Due Date','Change Due Date','Staff Code_Name','เบอร์ผู้ส่ง','Email ผู้ส่ง','RD_Reason_Desc','ชื่อ PM/AE','เบอร์ PM/AE','Remark','สถานะ Email'];
+  const rows=allRecs.map((r,i)=>[i+1,r.timestamp,r.submittedBy||'',r.circuit,r.customer,r.due_date,r.new_due_date,r.staff,r.sender_phone,r.sender_email||'',r.rd_reason,r.ae_name,r.ae_phone,r.remark||'',r.emailStatus==='sent'?'ดำเนินการแล้ว':'รอดำเนินการ']);
+  const wb=XLSX.utils.book_new();
+  const ws=XLSX.utils.aoa_to_sheet([headers,...rows]);
+  ws['!cols']=[4,18,14,18,22,12,12,28,14,28,45,18,14,30,18].map(w=>({wch:w}));
+  XLSX.utils.book_append_sheet(wb,'เลื่อนนัด',ws);
+  const sc={},rc={};
+  allRecs.forEach(r=>{sc[r.staff||'—']=(sc[r.staff||'—']||0)+1; rc[r.rd_reason||'—']=(rc[r.rd_reason||'—']||0)+1;});
+  const wsS=XLSX.utils.aoa_to_sheet([['สรุปตาม Staff'],['Staff','จำนวน'],...Object.entries(sc).sort((a,b)=>b[1]-a[1]),[],[],['สรุปตามเหตุผล'],['RD_Reason_Desc','จำนวน'],...Object.entries(rc).sort((a,b)=>b[1]-a[1])]);
+  XLSX.utils.book_append_sheet(wb,'สรุป',wsS);
+  const now=new Date();
+  XLSX.writeFile(wb,`reschedule_${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}.xlsx`);
+  toast('ส่งออก Excel สำเร็จ ('+allRecs.length+' รายการ)');
+}
+
+// ── Tabs ──────────────────────────────────────────────────────
+function aTab(tab){
+  ['tabRecords','tabStats','tabUsers'].forEach((id,i)=>document.getElementById(id).style.display=(['records','stats','users'][i]===tab?'':'none'));
+  document.querySelectorAll('.ni').forEach((el,i)=>el.classList.toggle('on',i===['records','stats','users'].indexOf(tab)));
+  document.getElementById('pageTitle').textContent={records:'รายการเลื่อนนัดทั้งหมด',stats:'สถิติสรุป',users:'จัดการผู้ใช้งาน'}[tab]||'';
+  if(tab==='users') renderUsers();
+}
+
+// ── Helpers ───────────────────────────────────────────────────
+function sErr(aid,tid,msg){ document.getElementById(tid).textContent=msg; document.getElementById(aid).classList.add('show'); }
+function toast(msg,type=''){
+  const c=document.getElementById('toastCt'); const t=document.createElement('div');
+  t.className='toast'+(type?' '+type:''); t.innerHTML=`<div class="tdot"></div>${msg}`; c.appendChild(t);
+  setTimeout(()=>{ t.style.opacity='0'; t.style.transition='opacity .3s'; setTimeout(()=>t.remove(),300); },4500);
+}
+</script>
+</body>
+</html>
