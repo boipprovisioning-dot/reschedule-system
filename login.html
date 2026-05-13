@@ -235,7 +235,7 @@ async function submitReg(){
   if(!full||!user||!pw){showRErr('กรุณากรอกข้อมูลที่จำเป็น');return;}
   if(pw.length<6){showRErr('Password ต้องมีอย่างน้อย 6 ตัวอักษร');return;}
   if(/\s/.test(user)){showRErr('Username ต้องไม่มีช่องว่าง');return;}
-  if(API==='YOUR_APPS_SCRIPT_URL'){showRErr('กรุณาตั้งค่า API URL ก่อน');return;}
+  if(API===https://script.google.com/macros/s/AKfycbwmhWSttROB898FD6zUhLE3DyxYleniCQArM-B5wIkVw06aLb1dfvSLZstHqezdNtM2/exec){showRErr('กรุณาตั้งค่า API URL ก่อน');return;}
   const btn=document.getElementById('regBtn');btn.disabled=true;btn.textContent='กำลังส่ง...';
   try{
     await POST({action:'register',data:{fullname:full,username:user,password:pw,email,role:regRole}});
