@@ -228,7 +228,11 @@ footer{text-align:center;padding:1.5rem;font-size:12px;color:var(--g500);border-
 
 <script>
 // ── Auth ──────────────────────────────────────────────────────
-const API   = sessionStorage.getItem('rsch_api')      || '';
+// ═══════════════════════════════════════════════════════════
+// ⚙️  ใส่ Web App URL ที่นี่ (เผื่อเปิดไฟล์โดยตรง)
+const API_URL = https://script.google.com/macros/s/AKfycbzjKpU_-RO2KGX79TczABL_bQBqU1MXls2Ms9cjv45JtQ5KzXPRfIxzvAR6z0wGkVOz/exec;
+// ═══════════════════════════════════════════════════════════
+const API   = sessionStorage.getItem('rsch_api') || API_URL;
 const UNAME = sessionStorage.getItem('rsch_username') || '';
 const FNAME = sessionStorage.getItem('rsch_fullname') || '';
 const ROLE  = sessionStorage.getItem('rsch_role')     || '';
