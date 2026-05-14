@@ -101,7 +101,7 @@ input.err{border-color:var(--c400)!important;box-shadow:0 0 0 3px rgba(216,90,48
   <div class="card">
     <div class="a-cfg" id="cfgNotice">
       ⚙️ <strong>ต้องตั้งค่าก่อนใช้งาน:</strong> เปิดไฟล์ด้วย Notepad แล้วเปลี่ยน<br>
-      <code> YOUR_APPS_SCRIPT_URL </code> เป็น Web App URL ของคุณ<br>
+      <code>https://script.google.com/macros/s/AKfycbyM4_aDVVCtfbc36GTb6Mbk2fE-L5Jp7UEQ0Bxcgt08uybbxt84ZxGgkd7hWdUtlKBD/exec</code> เป็น Web App URL ของคุณ<br>
       (ดูขั้นตอนใน README.txt ที่แนบมา)
     </div>
     <div class="card-title">เข้าสู่ระบบ</div>
@@ -173,10 +173,10 @@ input.err{border-color:var(--c400)!important;box-shadow:0 0 0 3px rgba(216,90,48
    4. Who has access: Anyone
    5. Deploy → Copy URL แล้วแทนที่ข้อความด้านล่าง
 ══════════════════════════════════════════════════════ */
-const API = https://script.google.com/macros/s/AKfycbzjKpU_-RO2KGX79TczABL_bQBqU1MXls2Ms9cjv45JtQ5KzXPRfIxzvAR6z0wGkVOz/exec;
+const API = 'https://script.google.com/macros/s/AKfycbyM4_aDVVCtfbc36GTb6Mbk2fE-L5Jp7UEQ0Bxcgt08uybbxt84ZxGgkd7hWdUtlKBD/exec';
 /* ══════════════════════════════════════════════════════ */
 
-if(API !== https://script.google.com/macros/s/AKfycbzjKpU_-RO2KGX79TczABL_bQBqU1MXls2Ms9cjv45JtQ5KzXPRfIxzvAR6z0wGkVOz/exec) document.getElementById('cfgNotice').style.display='none';
+if(API !== 'https://script.google.com/macros/s/AKfycbyM4_aDVVCtfbc36GTb6Mbk2fE-L5Jp7UEQ0Bxcgt08uybbxt84ZxGgkd7hWdUtlKBD/exec') document.getElementById('cfgNotice').style.display='none';
 
 async function GET(params){
   const u=new URL(API);
@@ -203,7 +203,7 @@ function clearAlerts(){['errAlert','pendingAlert'].forEach(id=>document.getEleme
 function setLoad(on){document.getElementById('loginBtn').disabled=on;document.getElementById('spin').style.display=on?'block':'none';document.getElementById('loginTxt').textContent=on?'กำลังตรวจสอบ...':'เข้าสู่ระบบ';document.getElementById('loginArrow').style.display=on?'none':'';}
 
 async function doLogin(){
-  if(API===https://script.google.com/macros/s/AKfycbzjKpU_-RO2KGX79TczABL_bQBqU1MXls2Ms9cjv45JtQ5KzXPRfIxzvAR6z0wGkVOz/exec){showErr('กรุณาตั้งค่า API URL ก่อน (ดูคำแนะนำในไฟล์)');return;}
+  if(API==='https://script.google.com/macros/s/AKfycbyM4_aDVVCtfbc36GTb6Mbk2fE-L5Jp7UEQ0Bxcgt08uybbxt84ZxGgkd7hWdUtlKBD/exec'){showErr('กรุณาตั้งค่า API URL ก่อน (ดูคำแนะนำในไฟล์)');return;}
   clearAlerts();
   const u=document.getElementById('uname').value.trim();
   const p=document.getElementById('pw').value;
@@ -235,7 +235,7 @@ async function submitReg(){
   if(!full||!user||!pw){showRErr('กรุณากรอกข้อมูลที่จำเป็น');return;}
   if(pw.length<6){showRErr('Password ต้องมีอย่างน้อย 6 ตัวอักษร');return;}
   if(/\s/.test(user)){showRErr('Username ต้องไม่มีช่องว่าง');return;}
-  if(API===https://script.google.com/macros/s/AKfycbzjKpU_-RO2KGX79TczABL_bQBqU1MXls2Ms9cjv45JtQ5KzXPRfIxzvAR6z0wGkVOz/exec){showRErr('กรุณาตั้งค่า API URL ก่อน');return;}
+  if(API==='https://script.google.com/macros/s/AKfycbyM4_aDVVCtfbc36GTb6Mbk2fE-L5Jp7UEQ0Bxcgt08uybbxt84ZxGgkd7hWdUtlKBD/exec'){showRErr('กรุณาตั้งค่า API URL ก่อน');return;}
   const btn=document.getElementById('regBtn');btn.disabled=true;btn.textContent='กำลังส่ง...';
   try{
     await POST({action:'register',data:{fullname:full,username:user,password:pw,email,role:regRole}});
